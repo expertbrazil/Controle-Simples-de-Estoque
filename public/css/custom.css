@@ -1,0 +1,465 @@
+/* Custom CSS */
+
+/* General */
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f8f9fa;
+    color: #212529;
+    line-height: 1.5;
+}
+
+/* Navigation */
+.navbar {
+    background-color: #ffffff;
+    box-shadow: 0 2px 4px rgba(0,0,0,.04);
+    padding: 0.75rem 1rem;
+}
+
+.navbar-brand {
+    font-weight: 600;
+    font-size: 1.25rem;
+    color: #2563eb !important;
+}
+
+.nav-link {
+    font-weight: 500;
+    padding: 0.5rem 1rem !important;
+    color: #4b5563 !important;
+    transition: color 0.2s ease-in-out;
+}
+
+.nav-link:hover {
+    color: #2563eb !important;
+}
+
+.nav-link.active {
+    color: #2563eb !important;
+    background-color: rgba(37, 99, 235, 0.1);
+    border-radius: 0.375rem;
+}
+
+/* Cards */
+.card {
+    border: none;
+    box-shadow: 0 1px 3px rgba(0,0,0,.1);
+    border-radius: 0.5rem;
+    transition: box-shadow 0.2s ease-in-out;
+}
+
+.card:hover {
+    box-shadow: 0 4px 6px rgba(0,0,0,.1);
+}
+
+.card-header {
+    background-color: #ffffff;
+    border-bottom: 1px solid rgba(0,0,0,.1);
+    padding: 1rem 1.25rem;
+    border-top-left-radius: 0.5rem !important;
+    border-top-right-radius: 0.5rem !important;
+}
+
+.card-header h5 {
+    margin: 0;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.card-body {
+    padding: 1.25rem;
+}
+
+/* Tables */
+.table {
+    margin-bottom: 0;
+}
+
+.table th {
+    font-weight: 600;
+    color: #4b5563;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    padding: 0.75rem 1rem;
+    background-color: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.table td {
+    padding: 1rem;
+    vertical-align: middle;
+    color: #4b5563;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.table-hover tbody tr:hover {
+    background-color: #f9fafb;
+}
+
+/* Buttons */
+.btn {
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-primary {
+    background-color: #2563eb;
+    border-color: #2563eb;
+}
+
+.btn-primary:hover {
+    background-color: #1d4ed8;
+    border-color: #1d4ed8;
+}
+
+.btn-secondary {
+    background-color: #6b7280;
+    border-color: #6b7280;
+}
+
+.btn-secondary:hover {
+    background-color: #4b5563;
+    border-color: #4b5563;
+}
+
+.btn-success {
+    background-color: #059669;
+    border-color: #059669;
+}
+
+.btn-success:hover {
+    background-color: #047857;
+    border-color: #047857;
+}
+
+.btn-danger {
+    background-color: #dc2626;
+    border-color: #dc2626;
+}
+
+.btn-danger:hover {
+    background-color: #b91c1c;
+    border-color: #b91c1c;
+}
+
+/* Forms */
+.form-label {
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 0.5rem;
+}
+
+.form-control, .form-select {
+    border-radius: 0.375rem;
+    padding: 0.5rem 0.75rem;
+    border-color: #d1d5db;
+    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 0.25rem rgba(37, 99, 235, 0.25);
+}
+
+.invalid-feedback {
+    font-size: 0.875rem;
+    color: #dc2626;
+}
+
+/* Badges */
+.badge {
+    font-weight: 500;
+    padding: 0.35em 0.65em;
+    border-radius: 0.375rem;
+}
+
+.badge.bg-success {
+    background-color: #059669 !important;
+}
+
+.badge.bg-danger {
+    background-color: #dc2626 !important;
+}
+
+.badge.bg-warning {
+    background-color: #d97706 !important;
+    color: #ffffff;
+}
+
+.badge.bg-info {
+    background-color: #0891b2 !important;
+}
+
+.badge.bg-secondary {
+    background-color: #6b7280 !important;
+}
+
+/* Alerts */
+.alert {
+    border: none;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.alert-success {
+    background-color: #ecfdf5;
+    color: #065f46;
+}
+
+.alert-danger {
+    background-color: #fef2f2;
+    color: #991b1b;
+}
+
+.alert-warning {
+    background-color: #fffbeb;
+    color: #92400e;
+}
+
+.alert-info {
+    background-color: #f0f9ff;
+    color: #075985;
+}
+
+/* Progress */
+.progress {
+    height: 0.5rem;
+    border-radius: 0.375rem;
+    background-color: #e5e7eb;
+}
+
+.progress-bar {
+    background-color: #2563eb;
+}
+
+/* Utilities */
+.text-muted {
+    color: #6b7280 !important;
+}
+
+.border-bottom {
+    border-bottom: 1px solid #e5e7eb !important;
+}
+
+/* Image Preview */
+.image-upload-container {
+    position: relative;
+}
+
+.img-thumbnail {
+    border-radius: 0.375rem;
+    border: 1px solid #e5e7eb;
+    padding: 0.25rem;
+}
+
+/* Dropdown */
+.dropdown-menu {
+    border: none;
+    box-shadow: 0 4px 6px rgba(0,0,0,.1);
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+}
+
+.dropdown-item {
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    color: #4b5563;
+    border-radius: 0.375rem;
+}
+
+.dropdown-item:hover {
+    background-color: #f3f4f6;
+    color: #2563eb;
+}
+
+.dropdown-divider {
+    border-top: 1px solid #e5e7eb;
+    margin: 0.5rem 0;
+}
+
+/* Pagination */
+.pagination {
+    margin: 1rem 0 0;
+}
+
+.page-link {
+    padding: 0.5rem 0.75rem;
+    color: #4b5563;
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    font-weight: 500;
+}
+
+.page-link:hover {
+    background-color: #f3f4f6;
+    color: #2563eb;
+    border-color: #e5e7eb;
+}
+
+.page-item.active .page-link {
+    background-color: #2563eb;
+    border-color: #2563eb;
+}
+
+/* Estilos da página inicial */
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    transition: all 0.3s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.table > :not(caption) > * > * {
+    padding: 1rem;
+}
+
+.table > tbody > tr:last-child > td {
+    border-bottom: none;
+}
+
+.bg-opacity-10 {
+    --bs-bg-opacity: 0.1;
+}
+
+/* Cores personalizadas para os ícones */
+.text-primary {
+    color: #0d6efd !important;
+}
+
+.text-success {
+    color: #198754 !important;
+}
+
+.text-info {
+    color: #0dcaf0 !important;
+}
+
+.text-warning {
+    color: #ffc107 !important;
+}
+
+/* Animação suave para links e botões */
+.btn, .nav-link {
+    transition: all 0.2s ease-in-out;
+}
+
+/* Estilo para tabelas responsivas */
+.table-responsive {
+    border-radius: 0.375rem;
+    overflow: hidden;
+}
+
+/* Estilo para cabeçalhos de card */
+.card-header {
+    background-color: transparent;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+    padding: 1rem;
+}
+
+.card-header h5 {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Espaçamento para ícones em badges */
+.badge i {
+    margin-right: 0.25rem;
+}
+
+/* Estilo para células de tabela com múltiplas linhas de texto */
+td div + small {
+    display: block;
+    margin-top: 0.25rem;
+}
+
+/* Estilo para links dentro de células de tabela */
+td a {
+    color: inherit;
+    text-decoration: none;
+}
+
+td a:hover {
+    color: var(--bs-primary);
+}
+
+/* Estilo para badges */
+.badge {
+    font-weight: 500;
+    padding: 0.5em 0.75em;
+}
+
+/* Ajuste de espaçamento para ícones grandes */
+.fs-1 {
+    font-size: 2rem !important;
+}
+
+/* Estilo para cards de estatísticas */
+.card-subtitle {
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.card-title {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+/* Estilo para links "Ver todos" */
+.btn-link {
+    color: var(--bs-primary);
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.btn-link:hover {
+    color: var(--bs-primary);
+    text-decoration: none;
+    opacity: 0.8;
+}
+
+/* Estilo para timestamps */
+.text-muted.small {
+    font-size: 0.75rem;
+}
+
+/* Estilo para mensagens vazias */
+.text-center.py-3.text-muted {
+    font-size: 0.875rem;
+}
+
+.text-center.py-3.text-muted i {
+    margin-right: 0.5rem;
+    font-size: 1rem;
+}
+
+/* Ajuste de espaçamento para grids responsivos */
+.row.g-4 {
+    --bs-gutter-x: 1.5rem;
+    --bs-gutter-y: 1.5rem;
+}
+
+/* Media queries para ajustes responsivos */
+@media (max-width: 767.98px) {
+    .card-body {
+        padding: 1rem;
+    }
+    
+    .table > :not(caption) > * > * {
+        padding: 0.75rem;
+    }
+    
+    .fs-1 {
+        font-size: 1.5rem !important;
+    }
+    
+    .card-title {
+        font-size: 1.5rem;
+    }
+}
