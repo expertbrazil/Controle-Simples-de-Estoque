@@ -62,13 +62,7 @@
                                         </span>
                                     </td>
                                     <td class="text-end">R$ {{ number_format($product->price, 2, ',', '.') }}</td>
-                                    <td class="text-end">
-                                        @if($product->cost_price)
-                                            R$ {{ number_format($product->cost_price, 2, ',', '.') }}
-                                        @else
-                                            -
-                                        @endif
-                                    </td>
+                                    <td class="text-end">R$ {{ number_format($product->cost_price, 2, ',', '.') }}</td>
                                     <td class="text-center">
                                         <span class="badge {{ $product->stock_quantity > 0 ? 'bg-success' : 'bg-danger' }}">
                                             {{ $product->stock_quantity }}

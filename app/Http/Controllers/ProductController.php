@@ -30,26 +30,26 @@ class ProductController extends BaseController
      */
     public function create()
     {
-        // Buscar todas as categorias ativas
-        $allCategories = Category::with('parent')
+        // Buscar todas as categorias ativas com hierarquia
+        $categories = Category::with('parent')
             ->where('active', true)
             ->orderBy('name')
-            ->get();
+            ->get()
+            ->map(function ($category) {
+                return [
+                    'id' => $category->id,
+                    'name' => $category->parent 
+                        ? $category->parent->name . ' > ' . $category->name 
+                        : $category->name
+                ];
+            });
 
-        // Formatar para o select principal
-        $categories = $allCategories->map(function ($category) {
-            return [
-                'id' => $category->id,
-                'name' => $category->parent 
-                    ? $category->parent->name . ' > ' . $category->name 
-                    : $category->name
-            ];
-        });
+        \Log::info('Categorias no create:', [
+            'count' => $categories->count(),
+            'categories' => $categories->toArray()
+        ]);
 
-        // Buscar apenas categorias pai para o modal
-        $parentCategories = $allCategories->whereNull('parent_id');
-
-        return view('products.create', compact('categories', 'parentCategories'));
+        return view('products.create', compact('categories'));
     }
 
     public function store(Request $request)
@@ -198,21 +198,29 @@ class ProductController extends BaseController
         }
     }
 
+    /**
+     * Formata um valor monetário para o formato do banco de dados
+     */
     private function formatMoneyToDatabase($value)
     {
         if (empty($value)) {
-            return 0;
+            return '0.00';
         }
-        
-        // Remove o símbolo da moeda e quaisquer espaços
-        $value = str_replace(['R$', ' '], '', $value);
+
+        // Remove tudo exceto números, vírgula e ponto
+        $value = preg_replace('/[^\d,.]/', '', $value);
         
         // Substitui vírgula por ponto
         $value = str_replace(',', '.', $value);
         
-        // Remove os pontos de milhares
-        $value = str_replace('.', '', substr($value, 0, -3)) . substr($value, -3);
+        // Se houver mais de um ponto, mantém apenas o último
+        if (substr_count($value, '.') > 1) {
+            $parts = explode('.', $value);
+            $last = array_pop($parts);
+            $value = implode('', $parts) . '.' . $last;
+        }
         
-        return (float) $value;
+        // Garante que é um número válido com 2 casas decimais
+        return number_format((float) $value, 2, '.', '');
     }
 }
