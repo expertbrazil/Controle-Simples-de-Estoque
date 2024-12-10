@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Storage;
 use App\Models\Category;
 use App\Models\SaleItem;
 
@@ -41,6 +42,8 @@ class Product extends Model
         'cost_price' => '0.00'
     ];
 
+    protected $appends = ['image_url'];
+
     public function category()
     {
         return $this->belongsTo(Category::class);
@@ -55,6 +58,11 @@ class Product extends Model
     {
         $this->stock_quantity -= $quantity;
         $this->save();
+    }
+
+    public function getImageUrlAttribute()
+    {
+        return $this->image ? Storage::url('public/products/' . $this->image) : null;
     }
 
     // Mutator para garantir que o preço seja salvo corretamente

@@ -236,30 +236,37 @@ document.addEventListener('DOMContentLoaded', function() {
     imageInput.addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (file) {
-            // Show preview
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                previewImage.src = e.target.result;
-                imagePreview.classList.remove('d-none');
-            }
-            reader.readAsDataURL(file);
+            // Upload image
+            const formData = new FormData();
+            formData.append('image', file);
+            formData.append('_token', '{{ csrf_token() }}');
 
-            // Simulate upload progress
             progressBar.classList.remove('d-none');
-            let progress = 0;
-            const interval = setInterval(() => {
-                progress += 10;
-                progressBarInner.style.width = progress + '%';
-                progressBarInner.setAttribute('aria-valuenow', progress);
-                
-                if (progress >= 100) {
-                    clearInterval(interval);
+            progressBarInner.style.width = '0%';
+            progressBarInner.setAttribute('aria-valuenow', 0);
+
+            fetch('{{ route('products.upload-image') }}', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('stored_image').value = data.fileName;
+                    previewImage.src = data.thumbnail;
+                    progressBarInner.style.width = '100%';
+                    progressBarInner.setAttribute('aria-valuenow', 100);
                     setTimeout(() => {
                         progressBar.classList.add('d-none');
-                        progressBarInner.style.width = '0%';
                     }, 500);
+                } else {
+                    alert('Erro ao fazer upload da imagem: ' + data.message);
                 }
-            }, 100);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Erro ao fazer upload da imagem');
+            });
         }
     });
 });

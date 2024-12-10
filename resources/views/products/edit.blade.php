@@ -175,7 +175,7 @@
                                     <div class="image-upload-container">
                                         @if($product->image)
                                             <div class="current-image mb-2">
-                                                <img src="{{ asset('imagens/produtos/' . $product->image) }}" 
+                                                <img src="{{ asset('images/produtos/' . $product->image) }}" 
                                                      alt="{{ $product->name }}" 
                                                      class="img-thumbnail" 
                                                      style="max-height: 200px;">

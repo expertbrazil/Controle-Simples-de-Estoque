@@ -32,16 +32,14 @@ class ImageService
             // Converte para WebP com qualidade 80
             $encodedImage = $img->toWebp(80);
             
-            // Define o caminho completo
-            $path = public_path('imagens/produtos');
-            
-            // Cria o diretório se não existir
-            if (!file_exists($path)) {
-                mkdir($path, 0755, true);
+            // Define o caminho do diretório
+            $publicPath = public_path("images/{$folder}");
+            if (!file_exists($publicPath)) {
+                mkdir($publicPath, 0755, true);
             }
             
-            // Salva o arquivo diretamente na pasta public
-            file_put_contents($path . '/' . $fileName, $encodedImage);
+            // Salva o arquivo
+            file_put_contents("{$publicPath}/{$fileName}", $encodedImage);
             
             return $fileName;
         } catch (\Exception $e) {
@@ -53,9 +51,10 @@ class ImageService
     public function delete(?string $path, string $folder): void
     {
         if ($path) {
-            $fullPath = public_path('imagens/produtos/' . $path);
-            if (file_exists($fullPath)) {
-                unlink($fullPath);
+            // Remove do diretório public/images
+            $publicPath = public_path("images/{$folder}/{$path}");
+            if (file_exists($publicPath)) {
+                unlink($publicPath);
             }
         }
     }

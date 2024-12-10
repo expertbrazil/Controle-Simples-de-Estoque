@@ -21,7 +21,15 @@ class ProductController extends BaseController
 
     public function index()
     {
-        $products = Product::with('category')->paginate(10);
+        $products = Product::orderBy('created_at', 'desc')->paginate(10);
+        $products->getCollection()->transform(function ($product) {
+            $product->formatted_price = 'R$ ' . number_format($product->price, 2, ',', '.');
+            $product->image_url = $product->image 
+                ? "/images/produtos/{$product->image}" 
+                : "/images/nova_rosa_callback_ok.webp";
+            return $product;
+        });
+        
         return view('products.index', compact('products'));
     }
 
@@ -148,6 +156,9 @@ class ProductController extends BaseController
     public function destroy(Product $product)
     {
         try {
+            if ($product->image) {
+                $this->imageService->delete($product->image, 'products');
+            }
             $product->delete();
             return redirect()->route('products.index')->with('success', 'Produto excluído com sucesso!');
         } catch (\Exception $e) {
@@ -174,7 +185,7 @@ class ProductController extends BaseController
                         'sku' => $product->sku,
                         'price' => number_format($product->price, 2, '.', ''),
                         'stock' => $product->stock,
-                        'image' => $product->image
+                        'image_url' => $product->image ? "/images/produtos/{$product->image}" : null
                     ];
                 });
 
@@ -201,7 +212,7 @@ class ProductController extends BaseController
                         'sku' => $product->sku,
                         'price' => number_format($product->price, 2, '.', ''),
                         'stock' => $product->stock,
-                        'image' => $product->image
+                        'image_url' => $product->image ? "/images/produtos/{$product->image}" : null
                     ];
                 });
             
@@ -217,32 +228,42 @@ class ProductController extends BaseController
     public function uploadImage(Request $request)
     {
         try {
-            $request->validate([
-                'image' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:2048'
+            $image = $request->file('image');
+            $fileName = $this->imageService->store($image, 'produtos');
+            
+            return response()->json([
+                'success' => true,
+                'fileName' => $fileName,
+                'thumbnail' => "/images/produtos/{$fileName}"
             ]);
-
-            if ($request->hasFile('image')) {
-                $fileName = $this->imageService->store($request->file('image'), 'products');
-                
-                return response()->json([
-                    'success' => true,
-                    'fileName' => $fileName,
-                    'imageUrl' => Storage::url('products/' . $fileName)
-                ]);
-            }
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Nenhuma imagem foi enviada.'
-            ], 400);
-
         } catch (\Exception $e) {
-            \Log::error('Erro ao fazer upload da imagem: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Erro ao fazer upload da imagem: ' . $e->getMessage()
+                'message' => 'Erro ao fazer upload da imagem'
             ], 500);
         }
+    }
+
+    public function getProducts(Request $request)
+    {
+        $term = $request->get('term');
+        $products = Product::where('name', 'LIKE', "%{$term}%")
+            ->orWhere('code', 'LIKE', "%{$term}%")
+            ->get()
+            ->map(function ($product) {
+                return [
+                    'id' => $product->id,
+                    'text' => $product->name,
+                    'code' => $product->code,
+                    'price' => number_format($product->price, 2, '.', ''),
+                    'stock' => $product->stock,
+                    'thumbnail' => $product->image 
+                        ? "/images/produtos/{$product->image}"
+                        : "/images/nova_rosa_callback_ok.webp"
+                ];
+            });
+
+        return response()->json($products);
     }
 
     protected function formatMoneyToDatabase($value)

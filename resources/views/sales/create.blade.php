@@ -194,9 +194,9 @@
         function displayProducts(products) {
             let html = '';
             products.forEach(product => {
-                const imageUrl = product.image 
-                    ? `/storage/${product.image}`
-                    : '/images/no-image.jpg';
+                const imageUrl = product.thumbnail 
+                    ? `/storage/app/public/${product.thumbnail}`
+                    : '/images/nova_rosa_callback_ok.webp';
                     
                 html += `
                     <div class="col">
@@ -383,6 +383,36 @@
         $('#verVendas').click(function() {
             window.location.href = '/sales';
         });
+
+        function formatProduct(product) {
+            if (!product.id) return product.text;
+            
+            var $container = $(
+                `<div class="select2-result-product d-flex align-items-center">
+                    <img src="/storage/app/public/produtos/${product.image}" class="product-img me-2" style="width: 50px; height: 50px; object-fit: cover;" />
+                    <div>
+                        <div class="product-name">${product.text}</div>
+                        <div class="product-details">
+                            <small>Código: ${product.code}</small><br>
+                            <small>Preço: R$ ${product.price}</small><br>
+                            <small>Estoque: ${product.stock}</small>
+                        </div>
+                    </div>
+                </div>`
+            );
+            
+            return $container;
+        }
+
+        function formatProductSelection(product) {
+            if (!product.id) return product.text;
+            return $(`
+                <div class="d-flex align-items-center">
+                    <img src="/storage/app/public/produtos/${product.image}" class="product-img me-2" style="width: 30px; height: 30px; object-fit: cover;" />
+                    <span>${product.text}</span>
+                </div>
+            `);
+        }
     });
 </script>
 @endpush
@@ -443,5 +473,4 @@
     }
 </style>
 @endpush
-
 @endsection

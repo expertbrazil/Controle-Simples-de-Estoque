@@ -37,12 +37,12 @@
                             @foreach($products as $product)
                                 <tr>
                                     <td class="text-center">{{ $product->id }}</td>
-                                    <td>
+                                    <td class="align-middle">
                                         @if($product->image)
-                                            <img src="{{ asset('imagens/produtos/' . $product->image) }}" 
+                                            <img src="/images/produtos/{{ $product->image }}" 
                                                  alt="{{ $product->name }}" 
-                                                 class="img-thumbnail"
-                                                 style="width: 50px; height: 50px; object-fit: contain;">
+                                                 class="product-thumbnail"
+                                                 style="width: 50px; height: 50px; object-fit: cover;">
                                         @else
                                             <div class="text-center" style="width: 50px; height: 50px; background-color: #f8f9fa; display: flex; align-items: center; justify-content: center; border-radius: 4px;">
                                                 <i class="bi bi-image text-muted"></i>
@@ -83,7 +83,7 @@
                                             <form action="{{ route('products.destroy', $product) }}" 
                                                   method="POST" 
                                                   class="d-inline"
-                                                  onsubmit="return confirm('Tem certeza que deseja excluir este produto?');">
+                                                  onsubmit="return confirm('Tem certeza que deseja excluir este produto?')">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" 
