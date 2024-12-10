@@ -164,10 +164,10 @@
                                             <div class="fw-semibold">{{ $sale->created_at->format('d/m/Y') }}</div>
                                             <small class="text-muted">{{ $sale->created_at->format('H:i') }}</small>
                                         </td>
-                                        <td>{{ $sale->customer_name ?? 'Cliente não identificado' }}</td>
+                                        <td>{{ $sale->customer_name }}</td>
                                         <td class="text-end">R$ {{ number_format($sale->total, 2, ',', '.') }}</td>
                                         <td class="text-center">
-                                            <span class="badge bg-success">Concluída</span>
+                                            <span class="badge bg-success">{{ $sale->status }}</span>
                                         </td>
                                     </tr>
                                 @empty

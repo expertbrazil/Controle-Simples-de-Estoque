@@ -142,8 +142,8 @@
         let html = '';
         products.forEach(product => {
             const imageUrl = product.image 
-                ? `/imagens/produtos/${product.image}`
-                : '/imagens/produtos/no-image.jpg';
+                ? `/images/produtos/${product.image}`
+                : '/images/produtos/no-image.jpg';
                 
             html += `
                 <div class="product-card">

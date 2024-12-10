@@ -14,7 +14,7 @@
                 <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#emailModal">
                     <i class="bi bi-envelope"></i> Email
                 </button>
-                <a href="https://wa.me/55{{ preg_replace('/\D/', '', $sale->customer->phone ?? '') }}?text={{ urlencode($whatsappMessage) }}" 
+                <a href="{{ $whatsappUrl }}" 
                    class="btn btn-outline-success" target="_blank">
                     <i class="bi bi-whatsapp"></i> WhatsApp
                 </a>

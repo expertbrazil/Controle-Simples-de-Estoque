@@ -31,16 +31,34 @@ class CustomerController extends BaseController
                 'name' => 'required|string|max:255',
                 'email' => 'nullable|email|max:255',
                 'phone' => 'nullable|string|max:20',
-                'cpf' => 'nullable|string|max:14'
+                'cpf' => 'nullable|string|max:14',
+                'cep' => 'nullable|string|max:9',
+                'endereco' => 'nullable|string|max:255',
+                'numero' => 'nullable|string|max:20',
+                'bairro' => 'nullable|string|max:100',
+                'cidade' => 'nullable|string|max:100',
+                'uf' => 'nullable|string|size:2'
             ]);
+
+            // Garante que o campo active seja true por padrão
+            $validatedData['active'] = true;
 
             $customer = Customer::create($validatedData);
 
-            return response()->json($customer, 201);
+            if ($request->wantsJson()) {
+                return response()->json($customer, 201);
+            }
+
+            return redirect()->route('customers.index')
+                ->with('success', 'Cliente cadastrado com sucesso!');
         } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Erro ao cadastrar cliente: ' . $e->getMessage()
-            ], 422);
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'message' => 'Erro ao cadastrar cliente: ' . $e->getMessage()
+                ], 422);
+            }
+
+            return back()->withInput()->with('error', 'Erro ao cadastrar cliente: ' . $e->getMessage());
         }
     }
 
@@ -52,17 +70,38 @@ class CustomerController extends BaseController
     public function update(Request $request, Customer $customer)
     {
         $validated = $request->validate([
-            'name' => 'required|max:255',
-            'phone' => 'required|max:20'
+            'name' => 'required|string|max:255',
+            'email' => 'nullable|email|max:255',
+            'phone' => 'nullable|string|max:20',
+            'cpf' => 'nullable|string|max:14',
+            'cep' => 'nullable|string|max:9',
+            'endereco' => 'nullable|string|max:255',
+            'numero' => 'nullable|string|max:20',
+            'bairro' => 'nullable|string|max:100',
+            'cidade' => 'nullable|string|max:100',
+            'uf' => 'nullable|string|size:2'
         ]);
 
         $validated['active'] = $request->has('active');
 
         try {
             $customer->update($validated);
-            return redirect()->route('customers.index')->with('success', 'Cliente atualizado com sucesso!');
+
+            if ($request->wantsJson()) {
+                return response()->json($customer);
+            }
+
+            return redirect()->route('customers.index')
+                ->with('success', 'Cliente atualizado com sucesso!');
         } catch (\Exception $e) {
-            return back()->withInput()->with('error', 'Erro ao atualizar cliente: ' . $e->getMessage());
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'message' => 'Erro ao atualizar cliente: ' . $e->getMessage()
+                ], 422);
+            }
+
+            return back()->withInput()
+                ->with('error', 'Erro ao atualizar cliente: ' . $e->getMessage());
         }
     }
 
@@ -70,7 +109,8 @@ class CustomerController extends BaseController
     {
         try {
             $customer->delete();
-            return redirect()->route('customers.index')->with('success', 'Cliente excluído com sucesso!');
+            return redirect()->route('customers.index')
+                ->with('success', 'Cliente excluído com sucesso!');
         } catch (\Exception $e) {
             return back()->with('error', 'Erro ao excluir cliente: ' . $e->getMessage());
         }

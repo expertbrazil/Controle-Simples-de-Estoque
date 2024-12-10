@@ -257,9 +257,9 @@ class ProductController extends BaseController
                     'code' => $product->code,
                     'price' => number_format($product->price, 2, '.', ''),
                     'stock' => $product->stock,
-                    'thumbnail' => $product->image 
+                    'image_url' => $product->image 
                         ? "/images/produtos/{$product->image}"
-                        : "/images/nova_rosa_callback_ok.webp"
+                        : "/images/produtos/no-image.jpg"
                 ];
             });
 

@@ -20,8 +20,8 @@ class ImageService
     public function store(UploadedFile $image, string $folder): string
     {
         try {
-            // Gera um nome único para o arquivo
-            $fileName = time() . '_' . uniqid() . '.webp';
+            // Usa o nome original do arquivo
+            $fileName = $image->getClientOriginalName();
             
             // Carrega a imagem
             $img = $this->manager->read($image);
@@ -29,17 +29,14 @@ class ImageService
             // Redimensiona mantendo a proporção
             $img->cover(150, 150);
             
-            // Converte para WebP com qualidade 80
-            $encodedImage = $img->toWebp(80);
-            
             // Define o caminho do diretório
             $publicPath = public_path("images/{$folder}");
             if (!file_exists($publicPath)) {
                 mkdir($publicPath, 0755, true);
             }
             
-            // Salva o arquivo
-            file_put_contents("{$publicPath}/{$fileName}", $encodedImage);
+            // Salva o arquivo no formato original
+            file_put_contents("{$publicPath}/{$fileName}", $img->encode());
             
             return $fileName;
         } catch (\Exception $e) {

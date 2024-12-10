@@ -52,7 +52,7 @@ class DeepCheckProductImages extends Command
             $this->line("- " . basename($path));
         }
         
-        $this->line("\nContents of public/imagens/produtos:");
+        $this->line("\nContents of public/images/produtos:");
         $imensProdutosPaths = glob(public_path('imagens/produtos/*'));
         foreach ($imensProdutosPaths as $path) {
             $this->line("- " . basename($path));

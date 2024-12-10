@@ -40,9 +40,18 @@ class HomeController extends Controller
             ->get();
 
         // Últimas vendas
-        $recentSales = Sale::orderBy('created_at', 'desc')
+        $recentSales = Sale::with('customer')
+            ->orderBy('created_at', 'desc')
             ->limit(5)
-            ->get();
+            ->get()
+            ->map(function ($sale) {
+                return (object) [
+                    'created_at' => $sale->created_at,
+                    'customer_name' => $sale->customer ? $sale->customer->name : 'Cliente não identificado',
+                    'total' => $sale->total_amount,
+                    'status' => 'Concluída'
+                ];
+            });
 
         return view('home', compact(
             'totalProducts',

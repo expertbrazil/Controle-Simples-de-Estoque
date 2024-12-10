@@ -22,30 +22,43 @@ class Sale extends Model
         'total_amount',
         'status',
         'payment_method',
-        'payment_status'
+        'payment_status',
+        'notes',
+        'completed_at',
+        'cancelled_at'
     ];
 
     protected $attributes = [
+        'status' => 'pending',
+        'payment_status' => 'pending',
         'discount_percent' => 0,
         'discount_amount' => 0,
-        'payment_status' => 'pending'
+        'subtotal_amount' => 0,
+        'total_amount' => 0
     ];
 
     protected $casts = [
         'subtotal_amount' => 'decimal:2',
         'discount_percent' => 'decimal:2',
         'discount_amount' => 'decimal:2',
-        'total_amount' => 'decimal:2'
+        'total_amount' => 'decimal:2',
+        'completed_at' => 'datetime',
+        'cancelled_at' => 'datetime'
     ];
 
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
+    protected $dates = [
+        'completed_at',
+        'cancelled_at'
+    ];
 
     public function customer()
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 
     public function items()
@@ -53,19 +66,50 @@ class Sale extends Model
         return $this->hasMany(SaleItem::class);
     }
 
-    public function calculateTotalAmount()
+    public function markAsCompleted()
     {
-        $this->total_amount = $this->items->sum('total_price');
-        
-        // Calcula o desconto
-        if ($this->discount_type === 'percentage' && $this->discount_value > 0) {
-            $this->discount = ($this->total_amount * $this->discount_value) / 100;
-        } elseif ($this->discount_type === 'fixed' && $this->discount_value > 0) {
-            $this->discount = $this->discount_value;
-        }
-        
-        $this->final_amount = $this->total_amount - $this->discount;
+        $this->status = 'completed';
+        $this->completed_at = now();
         $this->save();
+    }
+
+    public function markAsCancelled()
+    {
+        $this->status = 'cancelled';
+        $this->cancelled_at = now();
+        $this->save();
+    }
+
+    public function calculateTotals()
+    {
+        $this->subtotal_amount = $this->items->sum(function ($item) {
+            return $item->price * $item->quantity;
+        });
+
+        $this->discount_amount = ($this->subtotal_amount * $this->discount_percent) / 100;
+        $this->total_amount = $this->subtotal_amount - $this->discount_amount;
+        
+        return $this;
+    }
+
+    public function isPending()
+    {
+        return $this->status === 'pending';
+    }
+
+    public function isCompleted()
+    {
+        return $this->status === 'completed';
+    }
+
+    public function isCancelled()
+    {
+        return $this->status === 'cancelled';
+    }
+
+    public function isPaid()
+    {
+        return $this->payment_status === 'paid';
     }
 
     protected static function boot()
@@ -77,10 +121,7 @@ class Sale extends Model
                 $sale->user_id = auth()->id();
             }
             if (empty($sale->status)) {
-                $sale->status = 'completed';
-            }
-            if ($sale->total_amount > 0 && empty($sale->final_amount)) {
-                $sale->final_amount = $sale->total_amount;
+                $sale->status = 'pending';
             }
         });
     }

@@ -15,12 +15,22 @@ class SaleItem extends Model
         'sale_id',
         'product_id',
         'quantity',
-        'price'
+        'price',
+        'discount_percent',
+        'discount_amount',
+        'total'
+    ];
+
+    protected $attributes = [
+        'discount_percent' => 0,
+        'discount_amount' => 0
     ];
 
     protected $casts = [
-        'quantity' => 'integer',
-        'price' => 'decimal:2'
+        'price' => 'decimal:2',
+        'discount_percent' => 'decimal:2',
+        'discount_amount' => 'decimal:2',
+        'total' => 'decimal:2'
     ];
 
     public function sale()
@@ -33,9 +43,11 @@ class SaleItem extends Model
         return $this->belongsTo(Product::class);
     }
 
-    public function calculateTotalPrice()
+    public function calculateTotal()
     {
-        $this->total_price = $this->quantity * $this->unit_price;
-        $this->save();
+        $subtotal = $this->quantity * $this->price;
+        $this->discount_amount = ($subtotal * $this->discount_percent) / 100;
+        $this->total = $subtotal - $this->discount_amount;
+        return $this->total;
     }
 }

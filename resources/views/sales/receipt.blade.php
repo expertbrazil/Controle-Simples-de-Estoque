@@ -81,7 +81,7 @@
                                 @endif
                                 <tr>
                                     <td colspan="3" class="text-end"><strong>Total:</strong></td>
-                                    <td class="text-end"><strong>R$ {{ number_format($sale->final_amount, 2, ',', '.') }}</strong></td>
+                                    <td class="text-end"><strong>R$ {{ number_format($sale->total_amount, 2, ',', '.') }}</strong></td>
                                 </tr>
                             </tfoot>
                         </table>

@@ -8,9 +8,8 @@ use App\Models\Customer;
 use App\Models\SaleItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Routing\Controller as BaseController;
-use Illuminate\Support\Facades\Mail;
-use App\Mail\SaleDetails;
 
 class SaleController extends BaseController
 {
@@ -21,13 +20,15 @@ class SaleController extends BaseController
 
     public function index()
     {
-        $sales = Sale::with(['customer', 'items.product'])->latest()->paginate(10);
+        $sales = Sale::with(['customer', 'user'])->orderBy('created_at', 'desc')->get();
         return view('sales.index', compact('sales'));
     }
 
     public function create()
     {
-        return view('sales.create');
+        $customers = Customer::where('active', true)->get();
+        $products = Product::where('active', true)->get();
+        return view('sales.create', compact('customers', 'products'));
     }
 
     public function store(Request $request)
@@ -35,74 +36,67 @@ class SaleController extends BaseController
         try {
             DB::beginTransaction();
 
-            // Validar os dados
-            $validatedData = $request->validate([
+            $data = $request->validate([
                 'customer_id' => 'required|exists:customers,id',
-                'items' => 'required|array|min:1',
+                'items' => 'required|array',
                 'items.*.product_id' => 'required|exists:products,id',
                 'items.*.quantity' => 'required|integer|min:1',
-                'items.*.price' => 'required|numeric|min:0',
-                'discount_percent' => 'nullable|numeric|min:0|max:100'
+                'subtotal_amount' => 'required|numeric|min:0',
+                'discount_percent' => 'nullable|numeric|min:0|max:100',
+                'discount_amount' => 'nullable|numeric|min:0',
+                'total_amount' => 'required|numeric|min:0',
+                'payment_method' => 'required|string',
             ]);
 
             // Criar a venda
-            $sale = Sale::create([
-                'customer_id' => $validatedData['customer_id'],
-                'discount_percent' => $validatedData['discount_percent'] ?? 0,
-                'status' => 'pending'
-            ]);
+            $sale = new Sale();
+            $sale->customer_id = $data['customer_id'];
+            $sale->user_id = Auth::id();
+            $sale->status = 'completed';
+            $sale->payment_status = 'paid';
+            $sale->payment_method = $data['payment_method'];
+            $sale->subtotal_amount = $data['subtotal_amount'];
+            $sale->discount_percent = $data['discount_percent'] ?? 0;
+            $sale->discount_amount = $data['discount_amount'] ?? 0;
+            $sale->total_amount = $data['total_amount'];
+            $sale->save();
 
-            $totalAmount = 0;
-
-            // Adicionar os itens
-            foreach ($validatedData['items'] as $item) {
-                $product = Product::findOrFail($item['product_id']);
+            // Criar os itens da venda
+            foreach ($data['items'] as $itemData) {
+                $product = Product::findOrFail($itemData['product_id']);
                 
                 // Verificar estoque
-                if ($product->stock_quantity < $item['quantity']) {
-                    throw new \Exception("Estoque insuficiente para o produto {$product->name}");
+                if ($product->stock_quantity < $itemData['quantity']) {
+                    throw new \Exception("Produto {$product->name} não tem estoque suficiente.");
                 }
-
-                // Criar o item da venda
-                $saleItem = $sale->items()->create([
-                    'product_id' => $item['product_id'],
-                    'quantity' => $item['quantity'],
-                    'price' => $item['price']
-                ]);
-
-                // Atualizar o estoque
-                $product->decrement('stock_quantity', $item['quantity']);
-
-                $totalAmount += $item['quantity'] * $item['price'];
+                
+                // Criar item
+                $item = new SaleItem();
+                $item->sale_id = $sale->id;
+                $item->product_id = $product->id;
+                $item->quantity = $itemData['quantity'];
+                $item->price = $product->price;
+                $item->total = $product->price * $itemData['quantity'];
+                $item->save();
+                
+                // Atualizar estoque
+                $product->stock_quantity -= $itemData['quantity'];
+                $product->save();
             }
 
-            // Calcular o desconto
-            $discount = $totalAmount * ($validatedData['discount_percent'] ?? 0) / 100;
-            $finalAmount = $totalAmount - $discount;
-
-            // Atualizar os totais da venda
-            $sale->update([
-                'subtotal_amount' => $totalAmount,
-                'discount_amount' => $discount,
-                'total_amount' => $finalAmount
-            ]);
-
             DB::commit();
-
+            
             return response()->json([
                 'success' => true,
-                'message' => 'Venda criada com sucesso!',
+                'message' => 'Venda realizada com sucesso!',
                 'sale' => $sale->load(['customer', 'items.product'])
             ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
-            \Log::error('Erro ao criar venda: ' . $e->getMessage());
-            \Log::error($e->getTraceAsString());
-
             return response()->json([
                 'success' => false,
-                'message' => 'Erro ao criar a venda: ' . $e->getMessage()
+                'message' => 'Erro ao realizar venda: ' . $e->getMessage()
             ], 422);
         }
     }
@@ -242,27 +236,54 @@ class SaleController extends BaseController
 
     public function show(Sale $sale)
     {
-        $sale->load(['customer', 'items.product']);
+        $sale->load(['customer', 'items.product', 'user']);
         $whatsappMessage = $this->generateWhatsAppMessage($sale);
-        return view('sales.show', compact('sale', 'whatsappMessage'));
+        $whatsappUrl = $this->generateWhatsAppUrl($sale, $whatsappMessage);
+        return view('sales.show', compact('sale', 'whatsappMessage', 'whatsappUrl'));
+    }
+
+    protected function generateWhatsAppUrl(Sale $sale, $message)
+    {
+        $phone = preg_replace('/\D/', '', $sale->customer->phone ?? '');
+        return "https://wa.me/55{$phone}?text=" . rawurlencode($message);
     }
 
     public function generateWhatsAppMessage(Sale $sale)
     {
-        $message = "*Pedido #" . str_pad($sale->id, 6, '0', STR_PAD_LEFT) . "*\n\n";
-        $message .= "Data: " . $sale->created_at->format('d/m/Y') . "\n";
-        $message .= "Total: R$ " . number_format($sale->total_amount, 2, ',', '.') . "\n\n";
+        // Tradução dos métodos de pagamento
+        $paymentMethods = [
+            'money' => 'Dinheiro',
+            'credit' => 'Cartão de Crédito',
+            'debit' => 'Cartão de Débito',
+            'pix' => 'PIX'
+        ];
+
+        $message = "*PEDIDO #{$sale->id}*\n\n";
         
-        $message .= "*Itens:*\n";
+        // Informações do pedido
+        $message .= "*📅 Data:* " . $sale->created_at->format('d/m/Y H:i') . "\n";
+        $message .= "*👤 Cliente:* " . ($sale->customer->name ?? 'Não informado') . "\n";
+        $message .= "*💰 Pagamento:* " . ($paymentMethods[$sale->payment_method] ?? $sale->payment_method) . "\n\n";
+        
+        // Itens do pedido
+        $message .= "*📝 ITENS DO PEDIDO:*\n";
         foreach ($sale->items as $item) {
-            $subtotal = $item->quantity * $item->price;
             $message .= "• {$item->product->name}\n";
             $message .= "  {$item->quantity}x R$ " . number_format($item->price, 2, ',', '.') . 
-                       " = R$ " . number_format($subtotal, 2, ',', '.') . "\n";
+                       " = R$ " . number_format($item->quantity * $item->price, 2, ',', '.') . "\n";
         }
-
-        $message .= "\n*Total: R$ " . number_format($sale->total_amount, 2, ',', '.') . "*";
-
+        
+        // Totais
+        $message .= "\n*💵 RESUMO:*\n";
+        $message .= "Subtotal: R$ " . number_format($sale->subtotal_amount, 2, ',', '.') . "\n";
+        
+        if ($sale->discount_percent > 0) {
+            $message .= "Desconto: {$sale->discount_percent}%\n";
+            $message .= "Valor desconto: -R$ " . number_format($sale->discount_amount, 2, ',', '.') . "\n";
+        }
+        
+        $message .= "\n*TOTAL: R$ " . number_format($sale->total_amount, 2, ',', '.') . "*";
+        
         return $message;
     }
 
