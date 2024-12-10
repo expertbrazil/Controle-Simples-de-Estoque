@@ -21,3 +21,10 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+docker-compose.override.yml
+.DS_Store
+**/.DS_Store
+/public/imagens/produtos/*
+!/public/imagens/produtos/.gitkeep
+/storage/app/backups/*
+!/storage/app/backups/.gitkeep

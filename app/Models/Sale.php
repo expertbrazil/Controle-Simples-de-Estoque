@@ -14,29 +14,28 @@ class Sale extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'total_amount', 
-        'discount', 
-        'final_amount', 
-        'payment_method', 
-        'status', 
-        'notes', 
-        'user_id',
         'customer_id',
-        'discount_type',
-        'discount_value'
+        'user_id',
+        'subtotal_amount',
+        'discount_percent',
+        'discount_amount',
+        'total_amount',
+        'status',
+        'payment_method',
+        'payment_status'
     ];
 
     protected $attributes = [
-        'status' => 'completed',
-        'discount' => 0,
-        'final_amount' => 0
+        'discount_percent' => 0,
+        'discount_amount' => 0,
+        'payment_status' => 'pending'
     ];
 
     protected $casts = [
-        'total_amount' => 'decimal:2',
-        'discount' => 'decimal:2',
-        'final_amount' => 'decimal:2',
-        'discount_value' => 'decimal:2'
+        'subtotal_amount' => 'decimal:2',
+        'discount_percent' => 'decimal:2',
+        'discount_amount' => 'decimal:2',
+        'total_amount' => 'decimal:2'
     ];
 
     public function user()

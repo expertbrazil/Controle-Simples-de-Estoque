@@ -9,14 +9,18 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('products', function (Blueprint $table) {
-            $table->renameColumn('stock', 'stock_quantity');
+            if (Schema::hasColumn('products', 'stock') && !Schema::hasColumn('products', 'stock_quantity')) {
+                $table->renameColumn('stock', 'stock_quantity');
+            }
         });
     }
 
     public function down(): void
     {
         Schema::table('products', function (Blueprint $table) {
-            $table->renameColumn('stock_quantity', 'stock');
+            if (Schema::hasColumn('products', 'stock_quantity') && !Schema::hasColumn('products', 'stock')) {
+                $table->renameColumn('stock_quantity', 'stock');
+            }
         });
     }
 };

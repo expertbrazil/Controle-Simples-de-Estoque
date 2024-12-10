@@ -6,7 +6,7 @@
         <h5 class="mb-0">
             <i class="bi bi-cart"></i> Vendas
         </h5>
-        <a href="{{ route('pdv.create') }}" class="btn btn-light">
+        <a href="{{ route('sales.create') }}" class="btn btn-light">
             <i class="bi bi-plus-lg"></i> Nova Venda
         </a>
     </div>

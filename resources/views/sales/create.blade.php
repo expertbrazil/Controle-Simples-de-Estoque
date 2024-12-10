@@ -1,364 +1,447 @@
 @extends('layouts.app')
 
-@section('styles')
-<link rel="stylesheet" href="//code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
-<style>
-    .ui-autocomplete {
-        z-index: 9999;
-        max-height: 200px;
-        overflow-y: auto;
-        overflow-x: hidden;
-    }
-    .product-row:not(:last-child) {
-        margin-bottom: 1rem;
-        padding-bottom: 1rem;
-        border-bottom: 1px solid #dee2e6;
-    }
-    .remove-product {
-        cursor: pointer;
-    }
-    .customer-info {
-        background-color: #e3f2fd;
-        padding: 10px 15px;
-        border-radius: 5px;
-        margin-top: 10px;
-    }
-    .product-container {
-        background-color: #fff;
-        border: 1px solid #dee2e6;
-        border-radius: 5px;
-        padding: 20px;
-        margin-bottom: 20px;
-    }
-    .totals-card {
-        background-color: #f8f9fa;
-        border: 1px solid #dee2e6;
-        border-radius: 5px;
-        padding: 20px;
-    }
-    .product-header {
-        background-color: #f8f9fa;
-        padding: 10px;
-        margin-bottom: 15px;
-        border-radius: 5px;
-        font-weight: bold;
-    }
-    .stock-available {
-        background-color: #e7f3ff !important;
-    }
-    .stock-unavailable {
-        background-color: #fce7f3 !important;
-    }
-    #search_results {
-        position: relative;
-        z-index: 1000;
-        background: white;
-        border: 1px solid #dee2e6;
-        border-radius: 4px;
-        margin-top: 5px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    #search_results .table {
-        margin-bottom: 0;
-    }
-    #search_results .table-responsive {
-        max-height: 300px;
-    }
-</style>
-@endsection
-
 @section('content')
-<div class="container mt-4">
-    <h2><i class="bi bi-cart-plus"></i> PDV - Nova Venda</h2>
-
-    <form id="saleForm" action="{{ route('pdv.store') }}" method="POST">
-        @csrf
-        <div class="card mb-3">
-            <div class="card-body">
-                <!-- Cliente -->
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label for="customer_search">Cliente *</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="bi bi-person"></i></span>
-                            <input type="text" id="customer_search" class="form-control" placeholder="Digite o nome do cliente">
-                            <input type="hidden" id="customer_id" name="customer_id">
-                        </div>
-                        <div class="customer-info mt-2" style="display: none;">
-                            <span class="badge bg-success">
-                                Cliente selecionado: <span id="customer_name"></span>
-                            </span>
-                        </div>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card h-100">
+                <div class="card-body p-0">
+                    <div class="product-search-container px-3">
+                        <input type="text" id="product-search" class="form-control" 
+                               placeholder="Buscar produtos por nome, SKU ou código de barras...">
                     </div>
-                </div>
-
-                <!-- Busca de Produtos -->
-                <div class="row mb-3">
-                    <div class="col-md-12">
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="bi bi-search"></i></span>
-                            <input type="text" id="product_search" class="form-control" placeholder="Digite o nome ou código do produto">
+                    <div class="p-3">
+                        <div id="products-grid" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+                            <!-- Produtos serão listados aqui -->
                         </div>
-                    </div>
-                </div>
-
-                <!-- Produtos Selecionados -->
-                <div id="products_container" class="row mb-3">
-                </div>
-
-                <!-- Totais -->
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label>Subtotal</label>
-                            <div class="input-group">
-                                <span class="input-group-text">R$</span>
-                                <input type="text" class="form-control" id="subtotal" readonly>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label>Desconto</label>
-                            <div class="input-group">
-                                <input type="radio" class="btn-check" name="discount_type" id="discount_type_percentage" value="percentage" checked>
-                                <label class="btn btn-outline-secondary" for="discount_type_percentage">%</label>
-                                <input type="number" class="form-control" id="discount_value" name="discount_value" placeholder="%" min="0" max="100" step="0.1">
-                                <span class="input-group-text">ou</span>
-                                <input type="radio" class="btn-check" name="discount_type" id="discount_type_fixed" value="fixed">
-                                <label class="btn btn-outline-secondary" for="discount_type_fixed">R$</label>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label>Total</label>
-                            <div class="input-group">
-                                <span class="input-group-text">R$</span>
-                                <input type="text" class="form-control" id="total_amount" readonly>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label>Método de Pagamento</label>
-                            <select name="payment_method" class="form-control" required>
-                                <option value="">Selecione...</option>
-                                <option value="money">Dinheiro</option>
-                                <option value="credit_card">Cartão de Crédito</option>
-                                <option value="debit_card">Cartão de Débito</option>
-                                <option value="pix">PIX</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label>Observações</label>
-                            <textarea name="notes" class="form-control" rows="3"></textarea>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row mt-3">
-                    <div class="col-12">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-check-circle"></i> Finalizar Venda
-                        </button>
-                        <a href="{{ route('sales.index') }}" class="btn btn-secondary">
-                            <i class="bi bi-x-circle"></i> Cancelar
-                        </a>
                     </div>
                 </div>
             </div>
         </div>
-    </form>
-</div>
-
-<!-- Modal de Confirmação -->
-<div class="modal fade" id="confirmationModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title">Confirmar Venda</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="sale-summary">
-                    <p><strong>Cliente:</strong> <span id="modal-customer"></span></p>
-                    <p><strong>Subtotal:</strong> R$ <span id="modal-subtotal"></span></p>
-                    <p><strong>Desconto:</strong> R$ <span id="modal-discount"></span></p>
-                    <p><strong>Total:</strong> R$ <span id="modal-total"></span></p>
+        <div class="col-md-4">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Cliente</h5>
+                        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#novoClienteModal">
+                            <i class="bi bi-person-plus"></i> Novo Cliente
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="input-group mb-3">
+                        <input type="text" id="clienteSearch" class="form-control" placeholder="Buscar cliente por nome, telefone ou CPF...">
+                        <button class="btn btn-outline-secondary" type="button" id="buscarCliente">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                    <div id="clienteResults" class="list-group" style="max-height: 200px; overflow-y: auto;">
+                        <!-- Resultados da busca aparecerão aqui -->
+                    </div>
+                    <div id="clienteSelecionado" class="mt-3" style="display: none;">
+                        <h6>Cliente Selecionado:</h6>
+                        <div class="card">
+                            <div class="card-body">
+                                <h6 id="clienteNome" class="card-title"></h6>
+                                <p id="clienteInfo" class="card-text small"></p>
+                                <input type="hidden" id="clienteId" name="customer_id">
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" id="confirm-sale">Confirmar</button>
+
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">Carrinho</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="cart-container p-3">
+                        <div id="cartItems">
+                            <!-- Items do carrinho serão inseridos aqui -->
+                        </div>
+                    </div>
+                    <div class="cart-summary p-3 border-top">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Subtotal:</span>
+                            <span id="subtotal" class="subtotal">R$ 0,00</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Desconto:</span>
+                            <div class="input-group" style="width: 150px;">
+                                <input type="number" class="form-control discount-input" value="0" min="0" max="100">
+                                <span class="input-group-text">%</span>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between fw-bold">
+                            <span>Total:</span>
+                            <span id="total" class="total">R$ 0,00</span>
+                        </div>
+                        <div class="mt-3">
+                            <button class="btn btn-primary w-100 mb-2" id="finalizarVenda">
+                                <i class="bi bi-check-circle"></i> Finalizar Venda
+                            </button>
+                            <div class="btn-group w-100">
+                                <button class="btn btn-outline-secondary" id="holdSale">
+                                    <i class="bi bi-clock-history"></i> Segurar
+                                </button>
+                                <button class="btn btn-outline-secondary" id="viewSales">
+                                    <i class="bi bi-list"></i> Ver Vendas
+                                </button>
+                                <button class="btn btn-outline-danger" id="cancelSale">
+                                    <i class="bi bi-x-circle"></i> Cancelar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
-@endsection
 
-@section('scripts')
-<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
-<script>
-$(document).ready(function() {
-    // Busca de clientes
-    $("#customer_search").autocomplete({
-        source: "{{ route('pdv.search-customers') }}",
-        minLength: 2,
-        select: function(event, ui) {
-            $("#customer_id").val(ui.item.id);
-            $("#customer_name").text(ui.item.label);
-            $(".customer-info").show();
-            return false;
-        }
-    });
-
-    // Busca de produtos
-    $("#product_search").autocomplete({
-        source: "{{ route('pdv.search-products') }}",
-        minLength: 2,
-        select: function(event, ui) {
-            addProduct(ui.item);
-            $(this).val('');
-            return false;
-        }
-    });
-
-    // Adicionar produto
-    function addProduct(product) {
-        const rowCount = $('.selected-product-row').length;
-        const rowHtml = `
-            <div class="row selected-product-row align-items-center mb-3 ${product.stock > 0 ? 'stock-available' : 'stock-unavailable'}">
-                <input type="hidden" name="products[${rowCount}][product_id]" value="${product.id}">
-                <div class="col-md-4">
-                    <strong>${product.label}</strong>
-                </div>
-                <div class="col-md-2">
-                    <div class="input-group">
-                        <input type="number" 
-                               name="products[${rowCount}][quantity]" 
-                               class="form-control product-quantity" 
-                               value="1" 
-                               min="1" 
-                               max="${product.stock}"
-                               required>
-                    </div>
-                </div>
-                <div class="col-md-2">
-                    <div class="input-group">
-                        <span class="input-group-text">R$</span>
-                        <input type="number" 
-                               name="products[${rowCount}][price]" 
-                               class="form-control product-price" 
-                               value="${product.price}" 
-                               step="0.01" 
-                               required>
-                    </div>
-                </div>
-                <div class="col-md-2">
-                    <strong class="product-total">R$ ${product.price}</strong>
-                </div>
-                <div class="col-md-2">
-                    <button type="button" class="btn btn-danger btn-sm remove-product">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                </div>
+<!-- Modal Novo Cliente -->
+<div class="modal fade" id="novoClienteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Novo Cliente</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-        `;
-        
-        $("#products_container").append(rowHtml);
-        updateTotals();
-    }
+            <div class="modal-body">
+                <form id="novoClienteForm">
+                    <div class="mb-3">
+                        <label class="form-label">Nome</label>
+                        <input type="text" class="form-control" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" name="email">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Telefone</label>
+                        <input type="tel" class="form-control" name="phone">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">CPF</label>
+                        <input type="text" class="form-control" name="cpf">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="salvarCliente">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
 
-    // Remover produto
-    $(document).on('click', '.remove-product', function() {
-        $(this).closest('.selected-product-row').remove();
-        updateTotals();
-    });
+@push('scripts')
+<script>
+    $(document).ready(function() {
+        let cart = [];
+        let allProducts = [];
 
-    // Atualizar quantidade ou preço
-    $(document).on('change', '.product-quantity, .product-price', function() {
-        const row = $(this).closest('.selected-product-row');
-        const quantity = parseFloat(row.find('.product-quantity').val()) || 0;
-        const price = parseFloat(row.find('.product-price').val()) || 0;
-        const total = quantity * price;
-        
-        row.find('.product-total').text(`R$ ${total.toFixed(2)}`);
-        updateTotals();
-    });
+        // Função para formatar valor em reais
+        function formatMoney(value) {
+            return parseFloat(value).toLocaleString('pt-BR', {
+                style: 'currency',
+                currency: 'BRL',
+                minimumFractionDigits: 2
+            });
+        }
 
-    // Atualizar totais
-    function updateTotals() {
-        let subtotal = 0;
-        $('.selected-product-row').each(function() {
-            const quantity = parseFloat($(this).find('.product-quantity').val()) || 0;
-            const price = parseFloat($(this).find('.product-price').val()) || 0;
-            subtotal += quantity * price;
+        // Função para formatar número
+        function formatNumber(value) {
+            return parseFloat(value).toFixed(2);
+        }
+
+        // Carregar produtos inicialmente
+        loadProducts();
+
+        function loadProducts() {
+            console.log('Iniciando carregamento de produtos...');
+            $.get('/products/for-sale')
+                .done(function(response) {
+                    console.log('Produtos carregados:', response);
+                    allProducts = response;
+                    displayProducts(allProducts);
+                })
+                .fail(function(error) {
+                    console.error('Erro ao carregar produtos:', error);
+                    alert('Erro ao carregar produtos. Por favor, recarregue a página.');
+                });
+        }
+
+        // Busca de produtos
+        $('#product-search').on('input', function() {
+            let query = $(this).val().toLowerCase();
+            
+            if (query.length === 0) {
+                displayProducts(allProducts);
+                return;
+            }
+
+            let filteredProducts = allProducts.filter(product => 
+                product.name.toLowerCase().includes(query) || 
+                (product.sku && product.sku.toLowerCase().includes(query))
+            );
+            
+            displayProducts(filteredProducts);
         });
 
-        $('#subtotal').val(subtotal.toFixed(2));
-        
-        // Calcular desconto
-        const discountType = $('input[name="discount_type"]:checked').val();
-        const discountValue = parseFloat($('#discount_value').val()) || 0;
-        let discount = 0;
-        
-        if (discountType === 'percentage') {
-            discount = (subtotal * discountValue) / 100;
-            if (discountValue > 100) {
-                $('#discount_value').val(100);
-                discount = subtotal;
+        // Exibir produtos
+        function displayProducts(products) {
+            let html = '';
+            products.forEach(product => {
+                const imageUrl = product.image 
+                    ? `/storage/${product.image}`
+                    : '/images/no-image.jpg';
+                    
+                html += `
+                    <div class="col">
+                        <div class="card h-100 product-card">
+                            <img src="${imageUrl}" class="card-img-top product-img" alt="${product.name}">
+                            <div class="card-body">
+                                <h6 class="card-title">${product.name}</h6>
+                                <div class="product-sku mb-1">SKU: ${product.sku || 'N/A'}</div>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div class="product-stock">Estoque: ${product.stock || 0}</div>
+                                    <div class="product-price">${formatMoney(product.price)}</div>
+                                </div>
+                                <button class="btn btn-primary btn-sm w-100 add-to-cart" 
+                                        data-product='${JSON.stringify(product)}'
+                                        ${product.stock <= 0 ? 'disabled' : ''}>
+                                    <i class="bi bi-cart-plus"></i> Adicionar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            if (products.length === 0) {
+                html = '<div class="col-12 text-center py-4">Nenhum produto encontrado</div>';
             }
-        } else {
-            discount = discountValue;
-            if (discount > subtotal) {
-                $('#discount_value').val(subtotal.toFixed(2));
-                discount = subtotal;
-            }
-        }
-        
-        const total = subtotal - discount;
-        $('#total_amount').val(total.toFixed(2));
-    }
-
-    // Atualizar desconto ao mudar tipo ou valor
-    $('input[name="discount_type"], #discount_value').on('change', updateTotals);
-
-    // Submeter venda
-    $('#saleForm').on('submit', function(e) {
-        e.preventDefault();
-        
-        if (!$('#customer_id').val()) {
-            alert('Por favor, selecione um cliente.');
-            return;
-        }
-        
-        if ($('.selected-product-row').length === 0) {
-            alert('Por favor, adicione pelo menos um produto.');
-            return;
+            
+            $('#products-grid').html(html);
         }
 
-        if (!$('select[name="payment_method"]').val()) {
-            alert('Por favor, selecione o método de pagamento.');
-            return;
-        }
-        
-        const form = $(this);
-        const submitButton = form.find('button[type="submit"]');
-        submitButton.prop('disabled', true);
-        
-        $.ajax({
-            url: form.attr('action'),
-            method: 'POST',
-            data: form.serialize(),
-            success: function(response) {
-                if (response.success) {
-                    window.location.href = "{{ route('sales.index') }}";
+        // Adicionar ao carrinho
+        $(document).on('click', '.add-to-cart', function() {
+            const product = $(this).data('product');
+            addToCart(product);
+        });
+
+        function addToCart(product) {
+            let existingItem = cart.find(item => item.id === product.id);
+            
+            if (existingItem) {
+                if (existingItem.quantity < product.stock) {
+                    existingItem.quantity++;
                 } else {
-                    alert(response.message);
-                    submitButton.prop('disabled', false);
+                    alert('Quantidade máxima atingida para este produto!');
+                    return;
                 }
-            },
-            error: function(xhr) {
-                alert(xhr.responseJSON?.message || 'Erro ao processar a venda.');
-                submitButton.prop('disabled', false);
+            } else {
+                cart.push({
+                    id: product.id,
+                    name: product.name,
+                    price: parseFloat(product.price),
+                    quantity: 1,
+                    stock: product.stock
+                });
+            }
+            
+            updateCart();
+        }
+
+        // Atualizar carrinho
+        function updateCart() {
+            let html = '';
+            let subtotal = 0;
+            
+            cart.forEach((item, index) => {
+                const itemTotal = item.price * item.quantity;
+                subtotal += itemTotal;
+                
+                html += `
+                    <div class="cart-item">
+                        <div class="d-flex justify-content-between mb-1">
+                            <div class="fw-500">${item.name}</div>
+                            <div class="cart-item-price">${formatMoney(itemTotal)}</div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="text-muted small">${formatMoney(item.price)} x ${item.quantity}</div>
+                            <div class="d-flex align-items-center gap-2">
+                                <button class="btn btn-outline-secondary btn-quantity decrease-qty" data-index="${index}">-</button>
+                                <span class="cart-item-quantity">${item.quantity}</span>
+                                <button class="btn btn-outline-secondary btn-quantity increase-qty" data-index="${index}">+</button>
+                                <button class="btn btn-outline-danger btn-quantity remove-item" data-index="${index}">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            $('#cartItems').html(html);
+            updateTotals(subtotal);
+        }
+
+        // Atualizar totais
+        function updateTotals(subtotal) {
+            const discountPercent = parseFloat($('.discount-input').val()) || 0;
+            const discountAmount = (subtotal * discountPercent) / 100;
+            const total = subtotal - discountAmount;
+
+            $('#subtotal').text(formatMoney(subtotal));
+            $('#total').text(formatMoney(total));
+        }
+
+        // Eventos do carrinho
+        $(document).on('click', '.increase-qty', function() {
+            const index = $(this).data('index');
+            if (cart[index].quantity < cart[index].stock) {
+                cart[index].quantity++;
+                updateCart();
             }
         });
+
+        $(document).on('click', '.decrease-qty', function() {
+            const index = $(this).data('index');
+            if (cart[index].quantity > 1) {
+                cart[index].quantity--;
+                updateCart();
+            }
+        });
+
+        $(document).on('click', '.remove-item', function() {
+            const index = $(this).data('index');
+            cart.splice(index, 1);
+            updateCart();
+        });
+
+        // Desconto
+        $('.discount-input').on('input', function() {
+            let value = parseFloat($(this).val());
+            if (isNaN(value) || value < 0) {
+                $(this).val(0);
+                value = 0;
+            } else if (value > 100) {
+                $(this).val(100);
+                value = 100;
+            }
+            
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            updateTotals(subtotal);
+        });
+
+        // Finalizar venda
+        $('#finalizarVenda').click(function() {
+            if (cart.length === 0) {
+                alert('Adicione produtos ao carrinho para finalizar a venda.');
+                return;
+            }
+
+            const saleData = {
+                items: cart.map(item => ({
+                    product_id: item.id,
+                    quantity: item.quantity,
+                    price: formatNumber(item.price)
+                })),
+                discount_percent: parseFloat($('.discount-input').val()) || 0,
+                total: formatNumber(parseFloat($('#total').text().replace(/[^0-9,-]/g, '').replace(',', '.')))
+            };
+
+            $.post('/sales', saleData)
+                .done(function(response) {
+                    alert('Venda finalizada com sucesso!');
+                    cart = [];
+                    updateCart();
+                })
+                .fail(function(error) {
+                    alert('Erro ao finalizar a venda. Tente novamente.');
+                });
+        });
+
+        // Cancelar venda
+        $('#cancelarVenda').click(function() {
+            if (confirm('Deseja realmente cancelar a venda?')) {
+                cart = [];
+                updateCart();
+            }
+        });
+
+        // Segurar venda
+        $('#segurarVenda').click(function() {
+            alert('Funcionalidade em desenvolvimento');
+        });
+
+        // Ver vendas
+        $('#verVendas').click(function() {
+            window.location.href = '/sales';
+        });
     });
-});
 </script>
+@endpush
+
+@push('styles')
+<style>
+    .product-card {
+        transition: transform 0.2s;
+        cursor: pointer;
+    }
+
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .product-img {
+        height: 150px;
+        object-fit: cover;
+        object-position: center;
+    }
+
+    .cart-container {
+        max-height: calc(100vh - 400px);
+        overflow-y: auto;
+    }
+
+    .product-search-container {
+        position: sticky;
+        top: 0;
+        background: white;
+        padding: 1rem;
+        z-index: 1000;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    #products-grid {
+        padding: 1rem;
+    }
+
+    .card-title {
+        font-size: 0.9rem;
+        line-height: 1.2;
+        height: 2.4em;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+
+    .cart-item {
+        padding: 0.5rem;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .cart-item:last-child {
+        border-bottom: none;
+    }
+</style>
+@endpush
+
 @endsection

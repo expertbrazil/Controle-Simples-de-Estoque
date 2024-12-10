@@ -26,18 +26,21 @@ class CustomerController extends BaseController
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|max:255',
-            'phone' => 'required|max:20'
-        ]);
-
-        $validated['active'] = $request->has('active');
-
         try {
-            Customer::create($validated);
-            return redirect()->route('customers.index')->with('success', 'Cliente cadastrado com sucesso!');
+            $validatedData = $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'nullable|email|max:255',
+                'phone' => 'nullable|string|max:20',
+                'cpf' => 'nullable|string|max:14'
+            ]);
+
+            $customer = Customer::create($validatedData);
+
+            return response()->json($customer, 201);
         } catch (\Exception $e) {
-            return back()->withInput()->with('error', 'Erro ao cadastrar cliente: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Erro ao cadastrar cliente: ' . $e->getMessage()
+            ], 422);
         }
     }
 
@@ -75,21 +78,15 @@ class CustomerController extends BaseController
 
     public function search(Request $request)
     {
-        $term = $request->get('term');
+        $query = $request->get('q');
         
-        $customers = Customer::where('name', 'LIKE', "%{$term}%")
-                            ->orWhere('phone', 'LIKE', "%{$term}%")
-                            ->select('id', 'name', 'phone')
-                            ->limit(10)
-                            ->get()
-                            ->map(function($customer) {
-                                return [
-                                    'id' => $customer->id,
-                                    'label' => "{$customer->name} - {$customer->phone}",
-                                    'value' => $customer->name
-                                ];
-                            });
-
+        $customers = Customer::where('name', 'like', "%{$query}%")
+            ->orWhere('phone', 'like', "%{$query}%")
+            ->orWhere('cpf', 'like', "%{$query}%")
+            ->orWhere('email', 'like', "%{$query}%")
+            ->limit(10)
+            ->get();
+            
         return response()->json($customers);
     }
 }

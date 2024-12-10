@@ -65,9 +65,9 @@
                                             name="category_id">
                                         <option value="">Selecione uma categoria</option>
                                         @foreach($categories as $category)
-                                            <option value="{{ $category->id }}" 
-                                                    {{ old('category_id') == $category->id ? 'selected' : '' }}>
-                                                {{ $category->name }}
+                                            <option value="{{ $category['id'] }}" 
+                                                    {{ old('category_id') == $category['id'] ? 'selected' : '' }}>
+                                                {{ $category['name'] }}
                                             </option>
                                         @endforeach
                                     </select>
@@ -82,12 +82,11 @@
                                     <label for="price" class="form-label">Preço de Venda <span class="text-danger">*</span></label>
                                     <div class="input-group">
                                         <span class="input-group-text">R$</span>
-                                        <input type="number" 
-                                               class="form-control @error('price') is-invalid @enderror" 
+                                        <input type="text" 
+                                               class="form-control money @error('price') is-invalid @enderror" 
                                                id="price" 
                                                name="price" 
                                                value="{{ old('price') }}" 
-                                               step="0.01" 
                                                required>
                                         @error('price')
                                             <div class="invalid-feedback">{{ $message }}</div>
@@ -101,12 +100,12 @@
                                     <label for="cost_price" class="form-label">Preço de Custo</label>
                                     <div class="input-group">
                                         <span class="input-group-text">R$</span>
-                                        <input type="number" 
-                                               class="form-control @error('cost_price') is-invalid @enderror" 
+                                        <input type="text" 
+                                               class="form-control money @error('cost_price') is-invalid @enderror" 
                                                id="cost_price" 
                                                name="cost_price" 
-                                               value="{{ old('cost_price') }}" 
-                                               step="0.01">
+                                               value="{{ old('cost_price') }}"
+                                               required>
                                         @error('cost_price')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror

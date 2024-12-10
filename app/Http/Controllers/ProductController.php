@@ -157,14 +157,61 @@ class ProductController extends BaseController
 
     public function search(Request $request)
     {
-        $term = strtolower($request->get('term', ''));
-        
-        return Product::where(function($query) use ($term) {
-            $query->whereRaw('LOWER(name) like ?', ['%' . $term . '%'])
-                  ->when($term, function($q) use ($term) {
-                      $q->orWhere('sku', 'like', '%' . $term . '%');
-                  });
-        })->get();
+        try {
+            $query = $request->get('q', '');
+            
+            $products = Product::where('active', true)
+                ->where(function($q) use ($query) {
+                    $q->where('name', 'like', "%{$query}%")
+                      ->orWhere('sku', 'like', "%{$query}%");
+                })
+                ->select('id', 'name', 'sku', 'price', 'stock_quantity as stock', 'image')
+                ->get()
+                ->map(function ($product) {
+                    return [
+                        'id' => $product->id,
+                        'name' => $product->name,
+                        'sku' => $product->sku,
+                        'price' => number_format($product->price, 2, '.', ''),
+                        'stock' => $product->stock,
+                        'image' => $product->image
+                    ];
+                });
+
+            return response()->json($products);
+        } catch (\Exception $e) {
+            \Log::error('Erro ao buscar produtos: ' . $e->getMessage());
+            return response()->json(['error' => 'Erro ao buscar produtos'], 500);
+        }
+    }
+
+    public function getProductsForSale()
+    {
+        try {
+            \Log::info('Iniciando getProductsForSale');
+            
+            $products = Product::where('active', true)
+                ->select('id', 'name', 'sku', 'price', 'stock_quantity as stock', 'image')
+                ->orderBy('name')
+                ->get()
+                ->map(function ($product) {
+                    return [
+                        'id' => $product->id,
+                        'name' => $product->name,
+                        'sku' => $product->sku,
+                        'price' => number_format($product->price, 2, '.', ''),
+                        'stock' => $product->stock,
+                        'image' => $product->image
+                    ];
+                });
+            
+            \Log::info('Produtos encontrados:', ['count' => $products->count()]);
+            
+            return response()->json($products);
+        } catch (\Exception $e) {
+            \Log::error('Erro em getProductsForSale: ' . $e->getMessage());
+            return response()->json(['error' => 'Erro ao buscar produtos'], 500);
+        }
     }
 
     public function uploadImage(Request $request)
@@ -198,29 +245,15 @@ class ProductController extends BaseController
         }
     }
 
-    /**
-     * Formata um valor monetário para o formato do banco de dados
-     */
-    private function formatMoneyToDatabase($value)
+    protected function formatMoneyToDatabase($value)
     {
-        if (empty($value)) {
-            return '0.00';
-        }
-
-        // Remove tudo exceto números, vírgula e ponto
-        $value = preg_replace('/[^\d,.]/', '', $value);
+        if (empty($value)) return 0;
         
+        // Remove o símbolo da moeda e espaços
+        $value = str_replace(['R$', ' '], '', $value);
         // Substitui vírgula por ponto
         $value = str_replace(',', '.', $value);
-        
-        // Se houver mais de um ponto, mantém apenas o último
-        if (substr_count($value, '.') > 1) {
-            $parts = explode('.', $value);
-            $last = array_pop($parts);
-            $value = implode('', $parts) . '.' . $last;
-        }
-        
-        // Garante que é um número válido com 2 casas decimais
-        return number_format((float) $value, 2, '.', '');
+        // Converte para float
+        return (float) $value;
     }
 }

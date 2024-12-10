@@ -51,13 +51,13 @@ class CategoryController extends Controller
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Categoria criada com sucesso!',
+                    'message' => '✅ Categoria criada com sucesso!',
                     'category' => $category
                 ]);
             }
 
             return redirect()->route('categories.index')
-                ->with('success', 'Categoria criada com sucesso!');
+                ->with('success', '✅ Categoria criada com sucesso!');
 
         } catch (\Exception $e) {
             \Log::error('Erro ao criar categoria: ' . $e->getMessage());
@@ -65,12 +65,12 @@ class CategoryController extends Controller
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Erro ao criar categoria: ' . $e->getMessage()
+                    'message' => '❌ Erro ao criar categoria. Por favor, tente novamente.'
                 ], 500);
             }
 
             return back()->withInput()
-                ->withErrors(['error' => 'Erro ao criar categoria: ' . $e->getMessage()]);
+                ->withErrors(['error' => '❌ Erro ao criar categoria. Por favor, tente novamente.']);
         }
     }
 
@@ -109,7 +109,43 @@ class CategoryController extends Controller
             \Log::error('Erro ao buscar categorias: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Erro ao buscar categorias'
+                'message' => '❌ Erro ao buscar categorias. Por favor, tente novamente.'
+            ], 500);
+        }
+    }
+
+    public function destroy(Category $category)
+    {
+        try {
+            // Verificar se a categoria tem produtos associados
+            if ($category->products()->exists()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => '⚠️ Não é possível excluir esta categoria pois existem produtos vinculados a ela.'
+                ], 422);
+            }
+
+            // Verificar se a categoria tem subcategorias
+            if ($category->children()->exists()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => '⚠️ Não é possível excluir esta categoria pois existem subcategorias vinculadas a ela.'
+                ], 422);
+            }
+
+            $category->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => '✅ Categoria excluída com sucesso!'
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Erro ao excluir categoria: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => '❌ Erro ao excluir categoria. Por favor, tente novamente.'
             ], 500);
         }
     }

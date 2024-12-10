@@ -12,16 +12,15 @@ class SaleItem extends Model
     use HasFactory;
 
     protected $fillable = [
-        'sale_id', 
-        'product_id', 
-        'quantity', 
-        'unit_price', 
-        'total_price'
+        'sale_id',
+        'product_id',
+        'quantity',
+        'price'
     ];
 
     protected $casts = [
-        'unit_price' => 'decimal:2',
-        'total_price' => 'decimal:2'
+        'quantity' => 'integer',
+        'price' => 'decimal:2'
     ];
 
     public function sale()
