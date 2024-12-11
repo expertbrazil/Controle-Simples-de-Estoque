@@ -36,41 +36,36 @@ class CategoryController extends Controller
         try {
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
-                'description' => 'nullable|string',
                 'parent_id' => 'nullable|exists:categories,id',
-                'active' => 'boolean'
+                'active' => 'required|boolean'
             ]);
 
             $category = Category::create([
                 'name' => $validated['name'],
-                'description' => $validated['description'] ?? null,
                 'parent_id' => $validated['parent_id'] ?? null,
-                'active' => $validated['active'] ?? true
+                'active' => (bool) $validated['active']
             ]);
 
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => true,
-                    'message' => '✅ Categoria criada com sucesso!',
+                    'message' => 'Categoria criada com sucesso!',
                     'category' => $category
                 ]);
             }
 
-            return redirect()->route('categories.index')
-                ->with('success', '✅ Categoria criada com sucesso!');
-
+            return redirect()->route('categories.index')->with('success', 'Categoria criada com sucesso!');
         } catch (\Exception $e) {
-            \Log::error('Erro ao criar categoria: ' . $e->getMessage());
-
+            Log::error('Erro ao criar categoria: ' . $e->getMessage());
+            
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => '❌ Erro ao criar categoria. Por favor, tente novamente.'
+                    'message' => 'Erro ao criar categoria. Por favor, tente novamente.'
                 ], 500);
             }
 
-            return back()->withInput()
-                ->withErrors(['error' => '❌ Erro ao criar categoria. Por favor, tente novamente.']);
+            return back()->with('error', 'Erro ao criar categoria. Por favor, tente novamente.');
         }
     }
 

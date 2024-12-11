@@ -7,7 +7,6 @@
         @endif
         {{ $category->name }}
     </td>
-    <td>{{ $category->description }}</td>
     <td>
         @if($category->active)
             <span class="badge bg-success">Ativa</span>
@@ -19,20 +18,22 @@
         <div class="btn-group" role="group">
             <button type="button" class="btn btn-sm btn-success" 
                     data-bs-toggle="modal" 
-                    data-bs-target="#addSubcategoryModal-{{ $category->id }}"
+                    data-bs-target="#subcategoryModal"
+                    data-category-id="{{ $category->id }}"
+                    data-category-name="{{ $category->name }}"
                     title="Adicionar Subcategoria">
                 <i class="bi bi-plus-lg"></i>
             </button>
             <a href="{{ route('categories.edit', $category) }}" 
-               class="btn btn-sm btn-primary"
+               class="btn btn-sm btn-info text-white"
                title="Editar">
-                <i class="bi bi-pencil"></i>
+                <i class="bi bi-pencil-square"></i>
             </a>
             <form action="{{ route('categories.destroy', $category) }}" 
-                  method="POST" class="d-inline">
+                  method="POST" class="d-inline delete-form">
                 @csrf
                 @method('DELETE')
-                <button type="submit" class="btn btn-sm btn-danger" 
+                <button type="submit" class="btn btn-sm btn-danger ms-1" 
                         onclick="return confirm('Tem certeza que deseja excluir esta categoria?')"
                         title="Excluir">
                     <i class="bi bi-trash"></i>
@@ -47,55 +48,36 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Nova Categoria</h5>
+                <h5 class="modal-title">Nova Subcategoria</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form action="{{ route('categories.store') }}" method="POST">
                 @csrf
+                <input type="hidden" name="parent_id" value="{{ $category->id }}">
+                
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="name-{{ $category->id }}" class="form-label">Nome da Categoria</label>
-                        <input type="text" class="form-control" 
-                               id="name-{{ $category->id }}" 
+                        <label for="name-{{ $category->id }}" class="form-label">Nome da Subcategoria <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="name-{{ $category->id }}" 
                                name="name" required maxlength="255">
                     </div>
-
-                    <div class="mb-3">
-                        <label for="description-{{ $category->id }}" class="form-label">Descrição</label>
-                        <textarea class="form-control" 
-                                  id="description-{{ $category->id }}" 
-                                  name="description" rows="2"></textarea>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Categoria Pai (Opcional)</label>
-                        <select class="form-select" name="parent_id">
-                            <option value="">Selecione uma categoria pai</option>
-                            @foreach($allCategories as $parentCategory)
-                                <option value="{{ $parentCategory->id }}" 
-                                        {{ $category->id == $parentCategory->id ? 'selected' : '' }}>
-                                    {!! str_repeat('&nbsp;&nbsp;&nbsp;&nbsp;', $parentCategory->level ?? 0) !!}
-                                    {{ $parentCategory->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
+                    
                     <div class="mb-3">
                         <div class="form-check form-switch">
+                            <input type="hidden" name="active" value="0">
                             <input type="checkbox" class="form-check-input" 
-                                   id="active-{{ $category->id }}" 
-                                   name="active" checked>
-                            <label class="form-check-label" for="active-{{ $category->id }}">
-                                Categoria Ativa
-                            </label>
+                                   id="active-{{ $category->id }}" name="active" value="1" checked>
+                            <label class="form-check-label" for="active-{{ $category->id }}">Categoria Ativa</label>
                         </div>
                     </div>
                 </div>
+                
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-lg me-1"></i>Cancelar
+                    </button>
                     <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-save"></i> Salvar
+                        <i class="bi bi-save me-1"></i>Salvar
                     </button>
                 </div>
             </form>
@@ -103,7 +85,6 @@
     </div>
 </div>
 
-{{-- Renderiza as categorias filhas --}}
 @if($category->children)
     @foreach($category->children as $child)
         @include('categories.category-row', ['category' => $child, 'level' => $level + 1])

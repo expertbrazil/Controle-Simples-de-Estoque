@@ -13,8 +13,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
     <!-- Styles -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" rel="stylesheet">
     <link href="{{ asset('css/custom.css') }}" rel="stylesheet">
     @stack('styles')
 
@@ -41,16 +42,36 @@
         .navbar-nav .nav-link i {
             margin-right: 0.5rem;
         }
+
+        .ui-autocomplete {
+            z-index: 9999;
+            max-height: 200px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .ui-menu-item {
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+        .ui-menu-item:hover {
+            background-color: #f8f9fa;
+        }
+        .ui-helper-hidden-accessible {
+            display: none;
+        }
     </style>
 
     <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.3/dist/sweetalert2.all.min.js"></script>
-    <script src="https://unpkg.com/imask"></script>
+    <script src="https://cdn.jsdelivr.net/npm/imask"></script>
     <script src="{{ asset('js/pdv.js') }}"></script>
     
     <script>
@@ -155,7 +176,7 @@
                     <!-- Left Side Of Navbar -->
                     <ul class="navbar-nav me-auto">
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}" href="{{ route('home') }}">
+                            <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
                                 <i class="bi bi-house"></i> Início
                             </a>
                         </li>
@@ -164,19 +185,41 @@
                                 <i class="bi bi-cart"></i> PDV
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('products.*') ? 'active' : '' }}" href="{{ route('products.index') }}">
-                                <i class="bi bi-box-seam"></i> Produtos
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle {{ request()->routeIs(['brands.*', 'suppliers.*', 'categories.*', 'products.*', 'customers.*']) ? 'active' : '' }}" href="#" id="navbarDropdownCadastros" role="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-folder"></i> Cadastros
                             </a>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a class="dropdown-item {{ request()->routeIs('brands.*') ? 'active' : '' }}" href="{{ route('brands.index') }}">
+                                        <i class="bi bi-tag"></i> Marcas
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item {{ request()->routeIs('categories.*') ? 'active' : '' }}" href="{{ route('categories.index') }}">
+                                        <i class="bi bi-diagram-2"></i> Categorias
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item {{ request()->routeIs('customers.*') ? 'active' : '' }}" href="{{ route('customers.index') }}">
+                                        <i class="bi bi-people"></i> Clientes
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item {{ request()->routeIs('products.*') ? 'active' : '' }}" href="{{ route('products.index') }}">
+                                        <i class="bi bi-box"></i> Produtos
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item {{ request()->routeIs('suppliers.*') ? 'active' : '' }}" href="{{ route('suppliers.index') }}">
+                                        <i class="bi bi-building"></i> Fornecedores
+                                    </a>
+                                </li>
+                            </ul>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('categories.*') ? 'active' : '' }}" href="{{ route('categories.index') }}">
-                                <i class="bi bi-tags"></i> Categorias
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('customers.*') ? 'active' : '' }}" href="{{ route('customers.index') }}">
-                                <i class="bi bi-people"></i> Clientes
+                            <a class="nav-link {{ request()->routeIs('product-entries.*') ? 'active' : '' }}" href="{{ route('product-entries.index') }}">
+                                <i class="bi bi-box-arrow-in-down"></i> Entrada de Produtos
                             </a>
                         </li>
                         <li class="nav-item">
@@ -226,48 +269,8 @@
         </nav>
 
         <main class="py-4">
-            @if (session('success'))
-                <div class="container-fluid px-4">
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        <i class="bi bi-check-circle me-2"></i> {{ session('success') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                </div>
-            @endif
-
-            @if (session('error'))
-                <div class="container-fluid px-4">
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <i class="bi bi-exclamation-triangle me-2"></i> {{ session('error') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                </div>
-            @endif
-
             @yield('content')
         </main>
-
-        @if (session('success'))
-        <script>
-            Swal.fire({
-                title: 'Sucesso!',
-                text: '{{ session('success') }}',
-                icon: 'success',
-                confirmButtonText: 'OK'
-            });
-        </script>
-        @endif
-
-        @if (session('error'))
-        <script>
-            Swal.fire({
-                title: 'Erro!',
-                text: '{{ session('error') }}',
-                icon: 'error',
-                confirmButtonText: 'OK'
-            });
-        </script>
-        @endif
     </div>
 </body>
 </html>

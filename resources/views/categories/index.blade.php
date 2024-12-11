@@ -1,14 +1,22 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container">
+<div class="container-fluid px-4">
+    <div class="mb-4">
+        <h2 class="mt-4">Categorias</h2>
+        <ol class="breadcrumb mb-4">
+            <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+            <li class="breadcrumb-item active">Categorias</li>
+        </ol>
+    </div>
+
+    @include('layouts.messages')
+
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">
-                <i class="fas fa-tags"></i> Categorias
-            </h5>
+            <span>Lista de Categorias</span>
             <a href="{{ route('categories.create') }}" class="btn btn-primary">
-                + Nova Categoria
+                <i class="bi bi-plus-lg me-1"></i>Nova Categoria
             </a>
         </div>
 
@@ -16,14 +24,15 @@
             <div id="alertContainer"></div>
             
             @if($categories->isEmpty())
-                <x-alert type="info" :message="'Nenhuma categoria cadastrada.'" />
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle me-2"></i>Nenhuma categoria cadastrada.
+                </div>
             @else
                 <div class="table-responsive">
                     <table class="table table-hover">
                         <thead>
                             <tr>
                                 <th>Nome</th>
-                                <th>Descrição</th>
                                 <th>Status</th>
                                 <th>Ações</th>
                             </tr>
@@ -39,11 +48,74 @@
         </div>
     </div>
 </div>
+
+{{-- Modal para adicionar subcategoria --}}
+<div class="modal fade" id="subcategoryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nova Subcategoria</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ route('categories.store') }}" method="POST">
+                @csrf
+                <input type="hidden" name="parent_id" id="parent_id">
+                
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="subcategory_name" class="form-label">Nome da Subcategoria <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="subcategory_name" 
+                               name="name" required maxlength="255">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input type="hidden" name="active" value="0">
+                            <input type="checkbox" class="form-check-input" 
+                                   id="subcategory_active" name="active" value="1" checked>
+                            <label class="form-check-label" for="subcategory_active">Categoria Ativa</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-lg me-1"></i>Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save me-1"></i>Salvar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 @endsection
 
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Configuração do modal de subcategoria
+    const subcategoryModal = document.getElementById('subcategoryModal');
+    if (subcategoryModal) {
+        subcategoryModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const categoryId = button.getAttribute('data-category-id');
+            const categoryName = button.getAttribute('data-category-name');
+            
+            // Atualiza o ID da categoria pai
+            document.getElementById('parent_id').value = categoryId;
+            
+            // Atualiza o título do modal
+            this.querySelector('.modal-title').textContent = `Nova Subcategoria de "${categoryName}"`;
+            
+            // Limpa o formulário
+            this.querySelector('form').reset();
+            document.getElementById('subcategory_active').checked = true;
+        });
+    }
+
     function showAlert(message, type = 'success') {
         const alertContainer = document.getElementById('alertContainer');
         const alertHtml = `
@@ -65,8 +137,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 5000);
     }
 
-    // Interceptar o submit do formulário de exclusão
-    document.querySelectorAll('form[action^="{{ route('categories.index') }}"]').forEach(form => {
+    // Interceptar apenas os formulários de exclusão
+    document.querySelectorAll('form.delete-form').forEach(form => {
         form.addEventListener('submit', function(e) {
             e.preventDefault();
             
@@ -100,7 +172,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         location.reload();
                     }
                 } else {
-                    // Mostrar mensagem de erro
                     showAlert(data.message, 'danger');
                 }
             })
