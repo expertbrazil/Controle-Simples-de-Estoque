@@ -102,6 +102,26 @@
                                 </select>
                             </div>
 
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="customer_id" class="form-label">Cliente</label>
+                                        <select class="form-select select2" id="customer_id" name="customer_id">
+                                            <option value="">Selecione um cliente</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="price_type" class="form-label">Tipo de Preço</label>
+                                        <select class="form-select" id="price_type" name="price_type">
+                                            <option value="consumer">Consumidor Final</option>
+                                            <option value="distributor">Distribuidora</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="mt-3">
                                 <button class="btn btn-primary w-100 mb-2" id="finalizarVenda">
                                     <i class="bi bi-check-circle"></i> Finalizar Venda
@@ -145,6 +165,12 @@
                 ? `/images/produtos/${product.image}`
                 : '/images/produtos/no-image.jpg';
                 
+            const lastPurchaseInfo = product.last_purchase_date 
+                ? `<div class="last-purchase">
+                    <small>Última compra: R$ ${product.last_purchase_price} (${product.last_purchase_date})</small>
+                   </div>`
+                : '';
+
             html += `
                 <div class="product-card">
                     <div class="product-image">
@@ -156,6 +182,7 @@
                             <p class="product-sku">SKU: ${product.sku || 'N/A'}</p>
                             <p class="product-stock">Estoque: ${product.stock_quantity || 0}</p>
                             <p class="product-price">R$ ${product.price}</p>
+                            ${lastPurchaseInfo}
                             <button class="btn btn-primary btn-add-cart" onclick="event.preventDefault(); addToCart(${product.id})">
                                 <i class="bi bi-cart-plus"></i> Adicionar ao Carrinho
                             </button>
@@ -479,6 +506,240 @@
     $(document).ready(function() {
         loadProducts();
         document.getElementById('customerSearch').addEventListener('input', searchCustomers);
+
+        // Inicializa o Select2 para clientes
+        $('#customer_id').select2({
+            theme: 'bootstrap-5',
+            ajax: {
+                url: '{{ route("customers.search") }}',
+                dataType: 'json',
+                delay: 250,
+                data: function(params) {
+                    return {
+                        q: params.term
+                    };
+                },
+                processResults: function(data) {
+                    return {
+                        results: data
+                    };
+                },
+                cache: true
+            },
+            placeholder: 'Buscar cliente...',
+            minimumInputLength: 3,
+            templateResult: formatCustomer,
+            templateSelection: formatCustomer
+        });
+
+        // Função para formatar a exibição do cliente
+        function formatCustomer(customer) {
+            if (!customer.id) return customer.text;
+            return $(`<span>${customer.name} - ${customer.document}</span>`);
+        }
+
+        // Função para atualizar o preço do produto baseado no tipo selecionado
+        function updateProductPrice(product) {
+            const priceType = $('#price_type').val();
+            return priceType === 'consumer' ? product.consumer_price : product.distributor_price;
+        }
+
+        // Função para atualizar os preços do carrinho
+        function updateCartPrices() {
+            const priceType = $('#price_type').val();
+            cart = cart.map(item => {
+                item.price = priceType === 'consumer' ? item.consumer_price : item.distributor_price;
+                item.total = item.price * item.quantity;
+                return item;
+            });
+            updateCartTable();
+            calculateTotal();
+        }
+
+        // Evento de mudança no tipo de preço
+        $('#price_type').on('change', function() {
+            updateCartPrices();
+            if (selectedProduct) {
+                const price = updateProductPrice(selectedProduct);
+                $('#product_price').val(formatMoney(price));
+            }
+        });
+
+        // Busca de produtos
+        $('#product_search').select2({
+            theme: 'bootstrap-5',
+            ajax: {
+                url: '{{ route("products.search") }}',
+                dataType: 'json',
+                delay: 250,
+                data: function(params) {
+                    return {
+                        q: params.term
+                    };
+                },
+                processResults: function(data) {
+                    return {
+                        results: data.map(product => ({
+                            id: product.id,
+                            text: `${product.name} (${product.sku})`,
+                            ...product,
+                            consumer_price: parseFloat(product.consumer_price),
+                            distributor_price: parseFloat(product.distributor_price)
+                        }))
+                    };
+                },
+                cache: true
+            },
+            placeholder: 'Buscar produto...',
+            minimumInputLength: 3,
+            templateResult: formatProduct,
+            templateSelection: formatProduct
+        }).on('select2:select', function(e) {
+            selectedProduct = e.params.data;
+            const price = updateProductPrice(selectedProduct);
+            $('#product_price').val(formatMoney(price));
+            $('#product_quantity').val(1).focus();
+        });
+
+        // Função para formatar a exibição do produto
+        function formatProduct(product) {
+            if (!product.id) return product.text;
+            const price = updateProductPrice(product);
+            return $(`<span>${product.name} - ${product.sku} - R$ ${formatMoney(price)}</span>`);
+        }
+
+        // Função para adicionar produto ao carrinho
+        function addToCart() {
+            if (!selectedProduct) return;
+
+            const quantity = parseInt($('#product_quantity').val());
+            if (isNaN(quantity) || quantity <= 0) {
+                alert('Quantidade inválida');
+                return;
+            }
+
+            const price = updateProductPrice(selectedProduct);
+            const existingItem = cart.find(item => item.id === selectedProduct.id);
+
+            if (existingItem) {
+                existingItem.quantity += quantity;
+                existingItem.total = existingItem.price * existingItem.quantity;
+            } else {
+                cart.push({
+                    id: selectedProduct.id,
+                    name: selectedProduct.name,
+                    sku: selectedProduct.sku,
+                    quantity: quantity,
+                    price: price,
+                    consumer_price: selectedProduct.consumer_price,
+                    distributor_price: selectedProduct.distributor_price,
+                    total: price * quantity
+                });
+            }
+
+            updateCartTable();
+            calculateTotal();
+            resetProductForm();
+        }
+
+        // Função para atualizar a tabela do carrinho
+        function updateCartTable() {
+            const tbody = $('#cart-items');
+            tbody.empty();
+
+            cart.forEach((item, index) => {
+                tbody.append(`
+                    <tr>
+                        <td>${item.name}</td>
+                        <td>${item.sku}</td>
+                        <td class="text-center">${item.quantity}</td>
+                        <td class="text-end">R$ ${formatMoney(item.price)}</td>
+                        <td class="text-end">R$ ${formatMoney(item.total)}</td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-danger btn-sm" onclick="removeFromCart(${index})">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `);
+            });
+        }
+
+        // Função para calcular o total
+        function calculateTotal() {
+            const total = cart.reduce((sum, item) => sum + item.total, 0);
+            $('#cart-total').text(`R$ ${formatMoney(total)}`);
+        }
+
+        // Função para formatar valores monetários
+        function formatMoney(value) {
+            return value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        // Função para resetar o formulário de produto
+        function resetProductForm() {
+            $('#product_search').val(null).trigger('change');
+            $('#product_price').val('');
+            $('#product_quantity').val('');
+            selectedProduct = null;
+        }
+
+        // Função para remover item do carrinho
+        window.removeFromCart = function(index) {
+            cart.splice(index, 1);
+            updateCartTable();
+            calculateTotal();
+        };
+
+        // Evento de submit do formulário
+        $('#sale-form').on('submit', function(e) {
+            e.preventDefault();
+            
+            if (cart.length === 0) {
+                alert('Adicione produtos ao carrinho antes de finalizar a venda');
+                return;
+            }
+
+            const formData = {
+                customer_id: $('#customer_id').val(),
+                price_type: $('#price_type').val(),
+                items: cart.map(item => ({
+                    product_id: item.id,
+                    quantity: item.quantity,
+                    price: item.price
+                }))
+            };
+
+            $.ajax({
+                url: '{{ route("pdv.store") }}',
+                method: 'POST',
+                data: formData,
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    alert('Venda realizada com sucesso!');
+                    cart = [];
+                    updateCartTable();
+                    calculateTotal();
+                    resetProductForm();
+                },
+                error: function(xhr) {
+                    alert('Erro ao realizar a venda: ' + xhr.responseJSON.message);
+                }
+            });
+        });
+
+        // Adiciona produto ao carrinho quando pressionar Enter no campo quantidade
+        $('#product_quantity').on('keypress', function(e) {
+            if (e.which === 13) {
+                e.preventDefault();
+                addToCart();
+            }
+        });
+
+        // Botão de adicionar ao carrinho
+        $('#add-to-cart').on('click', addToCart);
     });
 </script>
 @endpush
@@ -583,6 +844,12 @@
         width: 100%;
         padding: 0.375rem;
         font-size: 0.875rem;
+    }
+
+    .product-card .last-purchase {
+        font-size: 0.8em;
+        color: #666;
+        margin-top: 4px;
     }
 
     /* Área do Carrinho */

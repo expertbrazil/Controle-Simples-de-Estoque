@@ -10,10 +10,13 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ParameterController;
 use App\Http\Controllers\PdvController;
 use App\Http\Controllers\SaleController;
+use App\Http\Controllers\ProductEntryController;
 use Illuminate\Support\Facades\Mail;
 use App\Models\Product;
 use App\Models\Category;
 use Illuminate\Http\Request;
+use App\Http\Controllers\BrandController;
+use App\Http\Controllers\SupplierController;
 
 // Rotas de Autenticação
 Route::middleware('guest')->group(function () {
@@ -29,7 +32,8 @@ Route::middleware('auth')->group(function () {
     Route::put('/profile', [AuthController::class, 'updateProfile'])->name('profile.update');
     
     // Rotas protegidas existentes
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/', [HomeController::class, 'index'])->name('home');
+    Route::get('/dashboard', [HomeController::class, 'index'])->name('dashboard');
     
     // Rotas de Categoria
     Route::get('/categories/get-categories', [CategoryController::class, 'getCategories'])
@@ -39,6 +43,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('products', ProductController::class);
     Route::get('products/search', [ProductController::class, 'search'])->name('products.search');
     Route::post('/products/upload-image', [ProductController::class, 'uploadImage'])->name('products.upload-image');
+    Route::get('products/{product}/duplicate', [ProductController::class, 'duplicate'])->name('products.duplicate');
     
     // Rotas para clientes
     Route::get('/customers/search', [CustomerController::class, 'search'])->name('customers.search');
@@ -56,6 +61,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/sales/search/customers', [SaleController::class, 'searchCustomers'])->name('sales.search.customers');
     Route::get('/sales/search/products', [SaleController::class, 'searchProducts'])->name('sales.search.products');
     Route::get('/sales/list/products', [SaleController::class, 'listProducts'])->name('sales.list.products');
+    Route::get('sales/{sale}/duplicate', [SaleController::class, 'duplicate'])->name('sales.duplicate');
     
     // Rotas do PDV
     Route::controller(PdvController::class)->group(function () {
@@ -68,10 +74,25 @@ Route::middleware('auth')->group(function () {
         Route::post('/pdv/sale/{id}/send-email', 'sendEmail')->name('pdv.send-email');
     });
     
+    // Rotas para Entrada de Produtos
+    Route::resource('product-entries', ProductEntryController::class);
+    Route::get('product-entries/search/products', [ProductEntryController::class, 'searchProducts'])
+        ->name('product-entries.search-products');
+    
     // Rotas de Parâmetros
     Route::get('/parameters', [ParameterController::class, 'index'])->name('parameters.index');
     Route::put('/parameters', [ParameterController::class, 'update'])->name('parameters.update');
     Route::post('/parameters', [ParameterController::class, 'store'])->name('parameters.store');
+    
+    // Rotas para Marcas
+    Route::middleware(['auth'])->group(function () {
+        Route::get('/', [HomeController::class, 'index'])->name('home');
+        
+        Route::resource('brands', BrandController::class);
+    });
+    
+    // Rotas para Fornecedores
+    Route::resource('suppliers', SupplierController::class);
     
     // Rota de teste de email
     Route::post('/test-email', function (Request $request) {
@@ -98,8 +119,6 @@ Route::middleware('auth')->group(function () {
                 ->with('error', 'Erro ao enviar email: ' . $e->getMessage());
         }
     })->name('test-email');
-    
-    Route::get('/home', [HomeController::class, 'index'])->name('home');
 });
 
 // Rota inicial

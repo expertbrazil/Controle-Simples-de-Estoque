@@ -4,9 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\Category;
+use App\Models\Brand;
+use App\Models\Supplier;
 use App\Services\ImageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Routing\Controller as BaseController;
 
 class ProductController extends BaseController
@@ -21,9 +25,13 @@ class ProductController extends BaseController
 
     public function index()
     {
-        $products = Product::orderBy('created_at', 'desc')->paginate(10);
+        $products = Product::with(['category', 'brand'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+
         $products->getCollection()->transform(function ($product) {
-            $product->formatted_price = 'R$ ' . number_format($product->price, 2, ',', '.');
+            $product->formatted_consumer_price = 'R$ ' . number_format($product->consumer_price, 2, ',', '.');
+            $product->formatted_distributor_price = 'R$ ' . number_format($product->distributor_price, 2, ',', '.');
             $product->image_url = $product->image 
                 ? "/images/produtos/{$product->image}" 
                 : "/images/nova_rosa_callback_ok.webp";
@@ -38,60 +46,75 @@ class ProductController extends BaseController
      */
     public function create()
     {
-        // Buscar todas as categorias ativas com hierarquia
-        $categories = Category::with('parent')
-            ->where('active', true)
-            ->orderBy('name')
-            ->get()
-            ->map(function ($category) {
-                return [
-                    'id' => $category->id,
-                    'name' => $category->parent 
-                        ? $category->parent->name . ' > ' . $category->name 
-                        : $category->name
-                ];
-            });
+        $categories = Category::where('active', true)->orderBy('name')->get();
+        $brands = Brand::where('active', true)->orderBy('name')->get();
+        $suppliers = Supplier::where('active', true)->orderBy('name')->get();
 
-        \Log::info('Categorias no create:', [
-            'count' => $categories->count(),
-            'categories' => $categories->toArray()
-        ]);
-
-        return view('products.create', compact('categories'));
+        return view('products.create', compact('categories', 'brands', 'suppliers'));
     }
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $validatedData = $request->validate([
             'name' => 'required|string|max:255',
-            'category_id' => 'required|exists:categories,id',
-            'price' => 'required|string',
-            'cost_price' => 'required|string',
             'description' => 'nullable|string',
+            'sku' => 'required|string|max:100|unique:products',
+            'barcode' => 'nullable|string|max:100',
+            'category_id' => 'required|exists:categories,id',
+            'brand_id' => 'required|exists:brands,id',
+            'supplier_id' => 'required|exists:suppliers,id',
+            'min_stock' => 'required|integer|min:0',
+            'max_stock' => 'required|integer|min:0',
+            'stock_quantity' => 'required|integer|min:0',
+            'last_purchase_price' => 'required|string',
+            'tax_percentage' => 'required|numeric|min:0',
+            'freight_cost' => 'required|string',
+            'weight_kg' => 'required|numeric|min:0',
+            'consumer_markup' => 'required|numeric|min:0',
+            'distributor_markup' => 'required|numeric|min:0',
+            'consumer_price' => 'required|string',
+            'distributor_price' => 'required|string',
             'stored_image' => 'nullable|string',
             'active' => 'boolean'
         ]);
 
         try {
-            $data = [
-                'name' => $validated['name'],
-                'category_id' => $validated['category_id'],
-                'price' => $this->formatMoneyToDatabase($validated['price']),
-                'cost_price' => $this->formatMoneyToDatabase($validated['cost_price']),
-                'description' => $validated['description'] ?? null,
-                'image' => $validated['stored_image'] ?? null,
+            // Calcula os preços
+            $prices = $this->calculatePrices($validatedData);
+
+            // Prepara os dados para salvar
+            $productData = array_merge($validatedData, [
+                'unit_cost' => $prices['unit_cost'],
+                'consumer_price' => $prices['consumer_price'],
+                'distributor_price' => $prices['distributor_price'],
+                'image' => $validatedData['stored_image'] ?? null,
                 'active' => $request->has('active')
-            ];
+            ]);
 
-            Product::create($data);
+            // Remove formatação dos valores monetários
+            $moneyFields = ['last_purchase_price', 'freight_cost', 'consumer_price', 'distributor_price'];
+            foreach ($moneyFields as $field) {
+                $productData[$field] = floatval(str_replace(['R$', '.', ','], ['', '', '.'], $productData[$field]));
+            }
 
-            return redirect()->route('products.index')
-                ->with('success', 'Produto criado com sucesso!');
+            DB::beginTransaction();
+
+            $product = Product::create($productData);
+
+            DB::commit();
+
+            return redirect()
+                ->route('products.index')
+                ->with('success', 'Produto cadastrado com sucesso!');
 
         } catch (\Exception $e) {
-            \Log::error('Erro ao criar produto: ' . $e->getMessage());
-            return back()->withInput()
-                ->withErrors(['error' => 'Erro ao criar produto: ' . $e->getMessage()]);
+            DB::rollBack();
+            Log::error('Erro ao cadastrar produto: ' . $e->getMessage());
+            
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Erro ao cadastrar produto. Por favor, tente novamente.');
         }
     }
 
@@ -103,53 +126,74 @@ class ProductController extends BaseController
 
     public function update(Request $request, Product $product)
     {
-        $validated = $request->validate([
+        $validatedData = $request->validate([
             'name' => 'required|string|max:255',
-            'sku' => 'nullable|string|max:50',
-            'category_id' => 'required|exists:categories,id',
-            'price' => 'required|string',
-            'cost_price' => 'required|string',
             'description' => 'nullable|string',
+            'sku' => 'required|string|max:100|unique:products,sku,' . $product->id,
+            'barcode' => 'nullable|string|max:100',
+            'category_id' => 'required|exists:categories,id',
+            'brand_id' => 'required|exists:brands,id',
+            'supplier_id' => 'required|exists:suppliers,id',
+            'min_stock' => 'required|integer|min:0',
+            'max_stock' => 'required|integer|min:0',
+            'last_purchase_price' => 'required|string',
+            'tax_percentage' => 'required|numeric|min:0',
+            'freight_cost' => 'required|string',
+            'weight_kg' => 'required|numeric|min:0',
+            'consumer_markup' => 'required|numeric|min:0',
+            'distributor_markup' => 'required|numeric|min:0',
+            'consumer_price' => 'required|string',
+            'distributor_price' => 'required|string',
             'stored_image' => 'nullable|string',
-            'stock_quantity' => 'required|integer|min:0',
-            'min_stock' => 'nullable|integer|min:0',
             'active' => 'boolean'
         ]);
 
         try {
-            $data = [
-                'name' => $validated['name'],
-                'sku' => $validated['sku'],
-                'category_id' => $validated['category_id'],
-                'price' => $this->formatMoneyToDatabase($validated['price']),
-                'cost_price' => $this->formatMoneyToDatabase($validated['cost_price']),
-                'description' => $validated['description'] ?? null,
-                'stock_quantity' => $validated['stock_quantity'],
-                'min_stock' => $validated['min_stock'] ?? 5,
+            // Calcula os preços
+            $prices = $this->calculatePrices($validatedData);
+
+            // Prepara os dados para salvar
+            $productData = array_merge($validatedData, [
+                'unit_cost' => $prices['unit_cost'],
+                'consumer_price' => $prices['consumer_price'],
+                'distributor_price' => $prices['distributor_price'],
                 'active' => $request->has('active')
-            ];
+            ]);
 
             // Atualizar imagem apenas se uma nova foi enviada
-            if (!empty($validated['stored_image'])) {
-                // Se a imagem for diferente da atual
-                if ($validated['stored_image'] !== $product->image) {
-                    // Deletar imagem antiga se existir
+            if (!empty($validatedData['stored_image'])) {
+                if ($validatedData['stored_image'] !== $product->image) {
                     if ($product->image) {
                         $this->imageService->delete($product->image, 'products');
                     }
-                    $data['image'] = $validated['stored_image'];
+                    $productData['image'] = $validatedData['stored_image'];
                 }
             }
 
-            $product->update($data);
+            // Remove formatação dos valores monetários
+            $moneyFields = ['last_purchase_price', 'freight_cost', 'consumer_price', 'distributor_price'];
+            foreach ($moneyFields as $field) {
+                $productData[$field] = floatval(str_replace(['R$', '.', ','], ['', '', '.'], $productData[$field]));
+            }
 
-            return redirect()->route('products.index')
+            DB::beginTransaction();
+
+            $product->update($productData);
+
+            DB::commit();
+
+            return redirect()
+                ->route('products.index')
                 ->with('success', 'Produto atualizado com sucesso!');
 
         } catch (\Exception $e) {
-            \Log::error('Erro ao atualizar produto: ' . $e->getMessage());
-            return back()->withInput()
-                ->withErrors(['error' => 'Erro ao atualizar produto: ' . $e->getMessage()]);
+            DB::rollBack();
+            Log::error('Erro ao atualizar produto: ' . $e->getMessage());
+            
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Erro ao atualizar produto. Por favor, tente novamente.');
         }
     }
 
@@ -248,18 +292,19 @@ class ProductController extends BaseController
     {
         $term = $request->get('term');
         $products = Product::where('name', 'LIKE', "%{$term}%")
-            ->orWhere('code', 'LIKE', "%{$term}%")
+            ->orWhere('sku', 'LIKE', "%{$term}%")
             ->get()
             ->map(function ($product) {
                 return [
                     'id' => $product->id,
                     'text' => $product->name,
-                    'code' => $product->code,
-                    'price' => number_format($product->price, 2, '.', ''),
-                    'stock' => $product->stock,
+                    'sku' => $product->sku,
+                    'consumer_price' => number_format($product->consumer_price, 2, '.', ''),
+                    'distributor_price' => number_format($product->distributor_price, 2, '.', ''),
+                    'stock_quantity' => $product->stock_quantity,
                     'image_url' => $product->image 
                         ? "/images/produtos/{$product->image}"
-                        : "/images/produtos/no-image.jpg"
+                        : "/images/produtos/no-image.webp"
                 ];
             });
 
@@ -276,5 +321,33 @@ class ProductController extends BaseController
         $value = str_replace(',', '.', $value);
         // Converte para float
         return (float) $value;
+    }
+
+    protected function calculatePrices($data)
+    {
+        // Calcula o custo unitário
+        $purchasePrice = floatval(str_replace(['R$', '.', ','], ['', '', '.'], $data['last_purchase_price']));
+        $taxPercentage = floatval($data['tax_percentage']);
+        $freightCost = floatval(str_replace(['R$', '.', ','], ['', '', '.'], $data['freight_cost']));
+        $weightKg = floatval($data['weight_kg']);
+
+        // Calcula o valor dos impostos
+        $taxAmount = $purchasePrice * ($taxPercentage / 100);
+        
+        // Calcula o custo do frete por unidade
+        $freightPerUnit = $weightKg > 0 ? ($freightCost / $weightKg) : 0;
+        
+        // Calcula o custo total por unidade
+        $unitCost = $purchasePrice + $taxAmount + $freightPerUnit;
+
+        // Calcula os preços com base nos markups
+        $consumerMarkup = floatval($data['consumer_markup']);
+        $distributorMarkup = floatval($data['distributor_markup']);
+
+        return [
+            'unit_cost' => $unitCost,
+            'consumer_price' => $unitCost * (1 + ($consumerMarkup / 100)),
+            'distributor_price' => $unitCost * (1 + ($distributorMarkup / 100))
+        ];
     }
 }

@@ -23,13 +23,16 @@
                             <tr>
                                 <th class="text-center" style="width: 60px;">ID</th>
                                 <th style="width: 80px;">Imagem</th>
-                                <th>Nome</th>
                                 <th>SKU</th>
+                                <th>Nome</th>
                                 <th>Categoria</th>
-                                <th class="text-end">Preço Venda</th>
-                                <th class="text-end">Preço Custo</th>
+                                <th>Marca</th>
+                                <th>Custo Unit.</th>
+                                <th>Preço Consumidor</th>
+                                <th>Preço Distribuidor</th>
                                 <th class="text-center">Estoque</th>
                                 <th class="text-center">Status</th>
+                                <th>Última Compra</th>
                                 <th class="text-end" style="width: 100px;">Ações</th>
                             </tr>
                         </thead>
@@ -49,20 +52,13 @@
                                             </div>
                                         @endif
                                     </td>
-                                    <td>
-                                        <div class="fw-semibold">{{ $product->name }}</div>
-                                        @if($product->description)
-                                            <small class="text-muted">{{ Str::limit($product->description, 50) }}</small>
-                                        @endif
-                                    </td>
-                                    <td>{{ $product->sku ?? '-' }}</td>
-                                    <td>
-                                        <span class="badge bg-secondary">
-                                            {{ $product->category->name ?? 'Sem categoria' }}
-                                        </span>
-                                    </td>
-                                    <td class="text-end">R$ {{ number_format($product->price, 2, ',', '.') }}</td>
-                                    <td class="text-end">R$ {{ number_format($product->cost_price, 2, ',', '.') }}</td>
+                                    <td>{{ $product->sku }}</td>
+                                    <td>{{ $product->name }}</td>
+                                    <td>{{ $product->category->name }}</td>
+                                    <td>{{ $product->brand->name }}</td>
+                                    <td>R$ {{ number_format($product->unit_cost, 2, ',', '.') }}</td>
+                                    <td>R$ {{ number_format($product->consumer_price, 2, ',', '.') }}</td>
+                                    <td>R$ {{ number_format($product->distributor_price, 2, ',', '.') }}</td>
                                     <td class="text-center">
                                         <span class="badge {{ $product->stock_quantity > 0 ? 'bg-success' : 'bg-danger' }}">
                                             {{ $product->stock_quantity }}
@@ -72,6 +68,15 @@
                                         <span class="badge {{ $product->active ? 'bg-success' : 'bg-danger' }}">
                                             {{ $product->active ? 'Ativo' : 'Inativo' }}
                                         </span>
+                                    </td>
+                                    <td>
+                                        @if($product->last_purchase_date)
+                                            R$ {{ number_format($product->last_purchase_price, 2, ',', '.') }}
+                                            <br>
+                                            <small class="text-muted">{{ $product->last_purchase_date->format('d/m/Y') }}</small>
+                                        @else
+                                            -
+                                        @endif
                                     </td>
                                     <td>
                                         <div class="btn-group float-end" role="group">

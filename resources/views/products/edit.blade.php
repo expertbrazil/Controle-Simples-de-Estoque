@@ -78,20 +78,40 @@
                                 </div>
                             </div>
 
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label for="price" class="form-label">Preço de Venda <span class="text-danger">*</span></label>
-                                    <div class="input-group">
-                                        <span class="input-group-text">R$</span>
-                                        <input type="text" 
-                                               class="form-control money @error('price') is-invalid @enderror" 
-                                               id="price" 
-                                               name="price" 
-                                               value="{{ old('price', number_format($product->price, 2, ',', '.')) }}"
-                                               required>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="price" class="form-label">Preço de Venda <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">R$</span>
+                                            <input type="text" 
+                                                   class="form-control money @error('price') is-invalid @enderror" 
+                                                   id="price" 
+                                                   name="price" 
+                                                   value="{{ old('price', number_format($product->price, 2, ',', '.')) }}"
+                                                   required>
+                                        </div>
                                         @error('price')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Última Compra</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">R$</span>
+                                            <input type="text" 
+                                                   class="form-control" 
+                                                   value="{{ number_format($product->last_purchase_price, 2, ',', '.') }}"
+                                                   disabled>
+                                        </div>
+                                        @if($product->last_purchase_date)
+                                            <small class="text-muted">
+                                                Última compra em {{ $product->last_purchase_date->format('d/m/Y H:i') }}
+                                            </small>
+                                        @endif
                                     </div>
                                 </div>
                             </div>

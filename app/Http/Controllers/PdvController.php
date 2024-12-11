@@ -25,7 +25,7 @@ class PdvController extends Controller
     {
         try {
             $products = Product::where('active', true)
-                ->select('id', 'name', 'sku', 'price', 'stock_quantity', 'image')
+                ->select('id', 'name', 'sku', 'price', 'stock_quantity', 'image', 'last_purchase_price', 'last_purchase_date')
                 ->orderBy('name')
                 ->get()
                 ->map(function ($product) {
@@ -35,7 +35,9 @@ class PdvController extends Controller
                         'sku' => $product->sku,
                         'price' => number_format($product->price, 2, '.', ''),
                         'stock_quantity' => $product->stock_quantity,
-                        'image' => $product->image
+                        'image' => $product->image,
+                        'last_purchase_price' => number_format($product->last_purchase_price, 2, '.', ''),
+                        'last_purchase_date' => $product->last_purchase_date ? $product->last_purchase_date->format('d/m/Y') : null
                     ];
                 });
 
@@ -141,6 +143,79 @@ class PdvController extends Controller
             DB::rollBack();
             \Log::error('Erro ao finalizar venda: ' . $e->getMessage());
             return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function store(Request $request)
+    {
+        $validatedData = $request->validate([
+            'customer_id' => 'nullable|exists:customers,id',
+            'price_type' => 'required|in:consumer,distributor',
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.price' => 'required|numeric|min:0'
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            // Cria a venda
+            $sale = Sale::create([
+                'customer_id' => $validatedData['customer_id'],
+                'price_type' => $validatedData['price_type'],
+                'user_id' => auth()->id(),
+                'status' => 'pending'
+            ]);
+
+            // Adiciona os itens
+            foreach ($validatedData['items'] as $item) {
+                $product = Product::findOrFail($item['product_id']);
+                
+                // Verifica o preço correto baseado no tipo
+                $correctPrice = $validatedData['price_type'] === 'consumer' 
+                    ? $product->consumer_price 
+                    : $product->distributor_price;
+
+                // Verifica se o preço enviado corresponde ao preço correto
+                if (abs($item['price'] - $correctPrice) > 0.01) {
+                    throw new \Exception("Preço do produto {$product->name} está incorreto");
+                }
+
+                // Verifica estoque
+                if ($product->stock_quantity < $item['quantity']) {
+                    throw new \Exception("Estoque insuficiente para o produto {$product->name}");
+                }
+
+                // Cria o item da venda
+                SaleItem::create([
+                    'sale_id' => $sale->id,
+                    'product_id' => $item['product_id'],
+                    'quantity' => $item['quantity'],
+                    'price' => $item['price'],
+                    'total' => $item['price'] * $item['quantity']
+                ]);
+
+                // Atualiza o estoque
+                $product->decrement('stock_quantity', $item['quantity']);
+            }
+
+            // Atualiza o total da venda
+            $sale->total = $sale->items->sum('total');
+            $sale->save();
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Venda realizada com sucesso!',
+                'sale' => $sale
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => $e->getMessage()
+            ], 422);
         }
     }
 
