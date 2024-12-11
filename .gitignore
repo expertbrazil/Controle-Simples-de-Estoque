@@ -1,30 +1,35 @@
-/.phpunit.cache
 /node_modules
-/public/build
 /public/hot
 /public/storage
 /storage/*.key
-/storage/pail
 /vendor
 .env
 .env.backup
-.env.production
-.phpactor.json
 .phpunit.result.cache
+docker-compose.override.yml
 Homestead.json
 Homestead.yaml
-auth.json
 npm-debug.log
 yarn-error.log
-/.fleet
 /.idea
-/.nova
 /.vscode
-/.zed
-docker-compose.override.yml
+
+# macOS system files
 .DS_Store
 **/.DS_Store
-/public/imagens/produtos/*
-!/public/imagens/produtos/.gitkeep
-/storage/app/backups/*
-!/storage/app/backups/.gitkeep
+
+# Laravel Mix
+/public/css
+/public/js
+/public/mix-manifest.json
+
+# Images
+/public/images/produtos/*
+/public/images/marcas/*
+!/public/images/produtos/.gitkeep
+!/public/images/marcas/.gitkeep
+
+# Backups
+*.zip
+*.sql
+*.gz
