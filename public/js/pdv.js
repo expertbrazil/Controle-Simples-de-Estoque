@@ -1,5 +1,10 @@
 // PDV JavaScript
 document.addEventListener('DOMContentLoaded', function() {
+    // Verifica se está na página do PDV
+    if (!document.getElementById('pdv-container')) {
+        return; // Se não estiver na página do PDV, não inicializa nada
+    }
+
     // Estado global
     const state = {
         cart: [],
@@ -25,19 +30,26 @@ document.addEventListener('DOMContentLoaded', function() {
         cancelSaleBtn: document.getElementById('cancel-sale')
     };
 
+    // Verifica se todos os elementos necessários existem
+    if (!elements.productSearch || !elements.productsGrid || !elements.cartItems) {
+        console.warn('Elementos necessários do PDV não encontrados');
+        return;
+    }
+
     // Atalhos de teclado
     document.addEventListener('keydown', function(e) {
         if (e.key === 'F2') { // Buscar cliente
-            document.querySelector('[data-bs-target="#customerSearchModal"]').click();
+            const customerSearchBtn = document.querySelector('[data-bs-target="#customerSearchModal"]');
+            if (customerSearchBtn) customerSearchBtn.click();
         } else if (e.key === 'F3') { // Foco na busca
             elements.productSearch.focus();
-        } else if (e.key === 'F4') { // Finalizar venda
+        } else if (e.key === 'F4' && elements.finishSaleBtn) { // Finalizar venda
             elements.finishSaleBtn.click();
-        } else if (e.key === 'F6') { // Segurar venda
+        } else if (e.key === 'F6' && elements.holdSaleBtn) { // Segurar venda
             elements.holdSaleBtn.click();
-        } else if (e.key === 'F7') { // Ver vendas
+        } else if (e.key === 'F7' && elements.viewSalesBtn) { // Ver vendas
             elements.viewSalesBtn.click();
-        } else if (e.key === 'F8') { // Cancelar venda
+        } else if (e.key === 'F8' && elements.cancelSaleBtn) { // Cancelar venda
             elements.cancelSaleBtn.click();
         }
     });
@@ -51,14 +63,16 @@ document.addEventListener('DOMContentLoaded', function() {
     function filterProducts(query) {
         const filteredProducts = state.products.filter(product => 
             product.name.toLowerCase().includes(query) ||
-            product.sku.toLowerCase().includes(query) ||
-            product.barcode.toLowerCase().includes(query)
+            (product.sku && product.sku.toLowerCase().includes(query)) ||
+            (product.barcode && product.barcode.toLowerCase().includes(query))
         );
         renderProducts(filteredProducts);
     }
 
     // Renderização de produtos
     function renderProducts(products) {
+        if (!elements.productsGrid) return;
+        
         elements.productsGrid.innerHTML = products.map(product => `
             <div class="product-card" data-id="${product.id}" onclick="addToCart(${product.id})">
                 <img src="${product.image || '/images/no-image.png'}" class="product-image" alt="${product.name}">
@@ -70,7 +84,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Gerenciamento do carrinho
-    function addToCart(productId) {
+    window.addToCart = function(productId) {
         const product = state.products.find(p => p.id === productId);
         if (!product) return;
 
@@ -94,6 +108,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function updateCart() {
+        if (!elements.cartItems) return;
+
         // Renderiza items
         elements.cartItems.innerHTML = state.cart.map((item, index) => `
             <div class="cart-item">
@@ -114,11 +130,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Atualiza totais
         const totals = calculateTotals();
-        elements.cartSubtotal.textContent = formatMoney(totals.subtotal_amount);
-        elements.cartTotal.textContent = formatMoney(totals.total_amount);
+        if (elements.cartSubtotal) elements.cartSubtotal.textContent = formatMoney(totals.subtotal_amount);
+        if (elements.cartTotal) elements.cartTotal.textContent = formatMoney(totals.total_amount);
     }
 
-    function updateQuantity(index, delta) {
+    window.updateQuantity = function(index, delta) {
         const item = state.cart[index];
         const newQuantity = item.quantity + delta;
 
@@ -131,7 +147,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    function removeItem(index) {
+    window.removeItem = function(index) {
         state.cart.splice(index, 1);
         updateCart();
         showToast('Item removido!', 'success');
@@ -144,7 +160,7 @@ document.addEventListener('DOMContentLoaded', function() {
             subtotal += item.product.price * item.quantity;
         });
 
-        const discountPercent = parseFloat(elements.discountInput.value || 0);
+        const discountPercent = parseFloat(elements.discountInput?.value || 0);
         const discountAmount = (subtotal * discountPercent) / 100;
         const total = subtotal - discountAmount;
 
@@ -157,152 +173,66 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Finalização da venda
-    elements.finishSaleBtn.addEventListener('click', function() {
-        if (state.cart.length === 0) {
-            showToast('Adicione produtos ao carrinho!', 'error');
-            return;
-        }
-
-        if (!state.selectedCustomer) {
-            showToast('Selecione um cliente!', 'error');
-            return;
-        }
-
-        const paymentMethod = state.paymentMethod;
-        if (!paymentMethod) {
-            showToast('Por favor, selecione um método de pagamento.', 'error');
-            return;
-        }
-
-        const totals = calculateTotals();
-        const saleData = {
-            customer_id: state.selectedCustomer.id,
-            items: state.cart.map(item => ({
-                product_id: item.product.id,
-                quantity: item.quantity
-            })),
-            subtotal_amount: totals.subtotal_amount,
-            discount_percent: totals.discount_percent,
-            discount_amount: totals.discount_amount,
-            total_amount: totals.total_amount,
-            payment_method: paymentMethod
-        };
-
-        fetch('/sales', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-            },
-            body: JSON.stringify(saleData)
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showToast('Venda realizada com sucesso!', 'success');
-                state.cart = [];
-                updateCart();
-                state.selectedCustomer = null;
-                elements.selectedCustomer.innerHTML = '';
-                elements.discountInput.value = '0';
-                calculateTotals();
-            } else {
-                showToast(data.message || 'Erro ao realizar venda.', 'error');
+    if (elements.finishSaleBtn) {
+        elements.finishSaleBtn.addEventListener('click', function() {
+            if (state.cart.length === 0) {
+                showToast('Adicione produtos ao carrinho!', 'error');
+                return;
             }
-        })
-        .catch(error => {
-            console.error('Erro:', error);
-            showToast('Erro ao realizar venda.', 'error');
-        });
-    });
 
-    // Cadastro de Cliente
-    document.getElementById('salvarNovoCliente').addEventListener('click', async function() {
-        const form = document.getElementById('novoClienteForm');
-        const formData = new FormData(form);
-        const data = Object.fromEntries(formData.entries());
+            if (!state.selectedCustomer) {
+                showToast('Selecione um cliente!', 'error');
+                return;
+            }
 
-        try {
-            const response = await fetch('/customers', {
+            const paymentMethod = state.paymentMethod;
+            if (!paymentMethod) {
+                showToast('Por favor, selecione um método de pagamento.', 'error');
+                return;
+            }
+
+            const totals = calculateTotals();
+            const saleData = {
+                customer_id: state.selectedCustomer.id,
+                items: state.cart.map(item => ({
+                    product_id: item.product.id,
+                    quantity: item.quantity
+                })),
+                subtotal_amount: totals.subtotal_amount,
+                discount_percent: totals.discount_percent,
+                discount_amount: totals.discount_amount,
+                total_amount: totals.total_amount,
+                payment_method: paymentMethod
+            };
+
+            fetch('/sales', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                 },
-                body: JSON.stringify(data)
+                body: JSON.stringify(saleData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('Venda realizada com sucesso!', 'success');
+                    // Limpa o carrinho
+                    state.cart = [];
+                    state.selectedCustomer = null;
+                    updateCart();
+                    // Atualiza a interface
+                    if (elements.selectedCustomer) elements.selectedCustomer.textContent = '';
+                    if (elements.discountInput) elements.discountInput.value = '';
+                } else {
+                    showToast(data.message || 'Erro ao finalizar venda', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                showToast('Erro ao finalizar venda', 'error');
             });
-
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Erro ao cadastrar cliente');
-            }
-
-            const customer = await response.json();
-            
-            // Atualiza o estado
-            state.selectedCustomer = customer;
-            
-            // Atualiza a UI
-            elements.selectedCustomer.innerHTML = `
-                <i class="bi bi-person-circle"></i>
-                <span>${customer.name}</span>
-            `;
-            
-            // Fecha o modal
-            bootstrap.Modal.getInstance(document.getElementById('novoClienteModal')).hide();
-            
-            // Limpa o formulário
-            form.reset();
-            
-            showToast('Cliente cadastrado com sucesso!', 'success');
-        } catch (error) {
-            console.error('Erro:', error);
-            showToast(error.message, 'error');
-        }
-    });
-
-    // Busca de CEP
-    document.getElementById('cep').addEventListener('blur', async function() {
-        const cep = this.value.replace(/\D/g, '');
-        
-        if (cep.length !== 8) return;
-
-        try {
-            const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-            const data = await response.json();
-
-            if (data.erro) {
-                throw new Error('CEP não encontrado');
-            }
-
-            // Preenche os campos
-            document.getElementById('endereco').value = data.logradouro;
-            document.getElementById('bairro').value = data.bairro;
-            document.getElementById('cidade').value = data.localidade;
-            document.getElementById('uf').value = data.uf;
-
-            // Foca no campo número
-            document.getElementById('numero').focus();
-        } catch (error) {
-            console.error('Erro:', error);
-            showToast('Erro ao buscar CEP', 'error');
-        }
-    });
-
-    // Máscaras de input
-    const masks = {
-        cpf: '000.000.000-00',
-        phone: '(00) 00000-0000',
-        cep: '00000-000'
-    };
-
-    for (const [id, mask] of Object.entries(masks)) {
-        const input = document.getElementById(id);
-        if (input) {
-            IMask(input, {
-                mask: mask
-            });
-        }
+        });
     }
 
     // Utilitários
@@ -315,13 +245,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function showToast(message, type = 'info') {
         const toast = document.createElement('div');
-        toast.className = `toast toast-${type} fade-in`;
+        toast.className = `toast toast-${type}`;
         toast.textContent = message;
         document.body.appendChild(toast);
-
-        setTimeout(() => {
-            toast.remove();
-        }, 3000);
+        setTimeout(() => toast.remove(), 3000);
     }
 
     function debounce(func, wait) {
@@ -337,21 +264,19 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Carrega produtos inicialmente
-    async function loadProducts() {
-        try {
-            const response = await fetch('/api/products');
-            if (!response.ok) throw new Error('Erro ao carregar produtos');
-            
-            state.products = await response.json();
-            state.categories = new Set(state.products.map(p => p.category));
-            
-            renderProducts(state.products);
-            renderCategories();
-        } catch (error) {
-            console.error('Erro:', error);
-            showToast('Erro ao carregar produtos!', 'error');
-        }
+    function loadProducts() {
+        fetch('/pdv/products')
+            .then(response => response.json())
+            .then(data => {
+                state.products = data;
+                renderProducts(data);
+            })
+            .catch(error => {
+                console.error('Erro ao carregar produtos:', error);
+                showToast('Erro ao carregar produtos', 'error');
+            });
     }
 
+    // Inicializa
     loadProducts();
 });
