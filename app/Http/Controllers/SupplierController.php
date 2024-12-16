@@ -3,14 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\Supplier;
+use App\Rules\SupplierValidation;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 
 class SupplierController extends Controller
 {
     public function index()
     {
-        $suppliers = Supplier::orderBy('name')->paginate(10);
+        $suppliers = Supplier::all();
         return view('suppliers.index', compact('suppliers'));
     }
 
@@ -21,28 +21,18 @@ class SupplierController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required|max:255',
-            'cnpj' => 'nullable|max:18|unique:suppliers',
-            'email' => 'nullable|email|max:255',
-            'phone' => 'nullable|max:20',
-            'whatsapp' => 'nullable|max:20',
-            'address' => 'nullable|max:255',
-            'neighborhood' => 'nullable|max:100',
-            'city' => 'nullable|max:100',
-            'state' => 'nullable|size:2',
-            'zip_code' => 'nullable|max:9',
-            'contact_name' => 'nullable|max:255',
-            'active' => 'boolean'
-        ]);
+        $validator = new SupplierValidation();
+        $validated = $request->validate($validator->rules(), $validator->messages());
 
-        try {
-            Supplier::create($request->all());
-            return redirect()->route('suppliers.index')->with('success', 'Fornecedor cadastrado com sucesso!');
-        } catch (\Exception $e) {
-            Log::error('Erro ao cadastrar fornecedor: ' . $e->getMessage());
-            return back()->with('error', 'Erro ao cadastrar fornecedor. Por favor, tente novamente.');
-        }
+        $supplier = Supplier::create($validated);
+
+        return redirect()->route('suppliers.index')
+            ->with('success', 'Fornecedor cadastrado com sucesso.');
+    }
+
+    public function show(Supplier $supplier)
+    {
+        return view('suppliers.show', compact('supplier'));
     }
 
     public function edit(Supplier $supplier)
@@ -52,38 +42,29 @@ class SupplierController extends Controller
 
     public function update(Request $request, Supplier $supplier)
     {
-        $request->validate([
-            'name' => 'required|max:255',
-            'cnpj' => 'nullable|max:18|unique:suppliers,cnpj,' . $supplier->id,
-            'email' => 'nullable|email|max:255',
-            'phone' => 'nullable|max:20',
-            'whatsapp' => 'nullable|max:20',
-            'address' => 'nullable|max:255',
-            'neighborhood' => 'nullable|max:100',
-            'city' => 'nullable|max:100',
-            'state' => 'nullable|size:2',
-            'zip_code' => 'nullable|max:9',
-            'contact_name' => 'nullable|max:255',
-            'active' => 'boolean'
-        ]);
+        $validator = new SupplierValidation();
+        $validated = $request->validate($validator->rules(), $validator->messages());
 
-        try {
-            $supplier->update($request->all());
-            return redirect()->route('suppliers.index')->with('success', 'Fornecedor atualizado com sucesso!');
-        } catch (\Exception $e) {
-            Log::error('Erro ao atualizar fornecedor: ' . $e->getMessage());
-            return back()->with('error', 'Erro ao atualizar fornecedor. Por favor, tente novamente.');
-        }
+        $supplier->update($validated);
+
+        return redirect()->route('suppliers.index')
+            ->with('success', 'Fornecedor atualizado com sucesso.');
     }
 
     public function destroy(Supplier $supplier)
     {
-        try {
-            $supplier->delete();
-            return redirect()->route('suppliers.index')->with('success', 'Fornecedor excluído com sucesso!');
-        } catch (\Exception $e) {
-            Log::error('Erro ao excluir fornecedor: ' . $e->getMessage());
-            return back()->with('error', 'Erro ao excluir fornecedor. Por favor, tente novamente.');
-        }
+        $supplier->delete();
+
+        return redirect()->route('suppliers.index')
+            ->with('success', 'Fornecedor excluído com sucesso.');
+    }
+
+    public function toggleStatus(Supplier $supplier)
+    {
+        $supplier->status = !$supplier->status;
+        $supplier->save();
+
+        return redirect()->route('suppliers.index')
+            ->with('success', 'Status do fornecedor alterado com sucesso.');
     }
 }

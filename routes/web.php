@@ -17,6 +17,12 @@ use App\Models\Category;
 use Illuminate\Http\Request;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\SupplierController;
+use App\Mail\TestEmail;
+
+// Rota inicial - redireciona para login ou dashboard
+Route::get('/', function () {
+    return redirect()->route('login');
+})->name('home');
 
 // Rotas de Autenticação
 Route::middleware('guest')->group(function () {
@@ -26,102 +32,139 @@ Route::middleware('guest')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
 });
 
+// Rotas protegidas por autenticação
 Route::middleware('auth')->group(function () {
+    // Dashboard
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    
+    // Autenticação
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('/profile', [AuthController::class, 'profile'])->name('profile');
     Route::put('/profile', [AuthController::class, 'updateProfile'])->name('profile.update');
     
-    // Rotas protegidas existentes
-    Route::get('/', [HomeController::class, 'index'])->name('home');
-    Route::get('/dashboard', [HomeController::class, 'index'])->name('dashboard');
-    
-    // Rotas de Categoria
+    // Categorias
     Route::get('/categories/get-categories', [CategoryController::class, 'getCategories'])
         ->name('categories.get-categories');
     Route::resource('categories', CategoryController::class);
     
+    // Produtos
     Route::resource('products', ProductController::class);
     Route::get('products/search', [ProductController::class, 'search'])->name('products.search');
     Route::post('/products/upload-image', [ProductController::class, 'uploadImage'])->name('products.upload-image');
     Route::get('products/{product}/duplicate', [ProductController::class, 'duplicate'])->name('products.duplicate');
     
-    // Rotas para clientes
+    // Clientes
     Route::get('/customers/search', [CustomerController::class, 'search'])->name('customers.search');
-    Route::post('/customers', [CustomerController::class, 'store'])->name('customers.store');
     Route::resource('customers', CustomerController::class);
     
-    // Rotas de Vendas
+    // PDV
+    Route::prefix('pdv')->group(function () {
+        Route::get('/', [PdvController::class, 'index'])->name('pdv.index');
+        Route::post('/', [PdvController::class, 'store'])->name('pdv.store');
+        Route::get('/product/{id}', [PdvController::class, 'getProduct'])->name('pdv.product');
+        Route::get('/customer/{id}', [PdvController::class, 'getCustomer'])->name('pdv.customer');
+    });
+    
+    // Vendas
     Route::resource('sales', SaleController::class);
-    Route::post('/sales/{sale}/cancel', [SaleController::class, 'cancel'])->name('sales.cancel');
-    Route::post('/sales/{sale}/send-email', [SaleController::class, 'sendEmail'])->name('sales.send-email');
-    Route::get('/sales/{sale}/receipt', [SaleController::class, 'receipt'])->name('sales.receipt');
-    Route::post('/sales/hold', [SaleController::class, 'hold'])->name('sales.hold');
-    Route::get('/sales/held', [SaleController::class, 'getHeldSales'])->name('sales.held');
-    Route::post('/sales/{sale}/finalize', [SaleController::class, 'finalizeSale'])->name('sales.finalize');
-    Route::get('/sales/search/customers', [SaleController::class, 'searchCustomers'])->name('sales.search.customers');
-    Route::get('/sales/search/products', [SaleController::class, 'searchProducts'])->name('sales.search.products');
-    Route::get('/sales/list/products', [SaleController::class, 'listProducts'])->name('sales.list.products');
-    Route::get('sales/{sale}/duplicate', [SaleController::class, 'duplicate'])->name('sales.duplicate');
+    Route::get('/sales/{sale}/print', [SaleController::class, 'print'])->name('sales.print');
     
-    // Rotas do PDV
-    Route::controller(PdvController::class)->group(function () {
-        Route::get('/pdv', 'index')->name('pdv.index');
-        Route::get('/pdv/products', 'getProducts')->name('pdv.products');
-        Route::get('/pdv/search-customers', 'searchCustomers')->name('pdv.search-customers');
-        Route::post('/pdv/finalize-sale', 'finalizeSale')->name('pdv.finalize-sale');
-        Route::get('/pdv/sale/{id}', 'show')->name('pdv.show');
-        Route::get('/pdv/sale/{id}/print', 'print')->name('pdv.print');
-        Route::post('/pdv/sale/{id}/send-email', 'sendEmail')->name('pdv.send-email');
-    });
-    
-    // Rotas para Entrada de Produtos
+    // Entradas de Produtos
     Route::resource('product-entries', ProductEntryController::class);
-    Route::get('product-entries/search/products', [ProductEntryController::class, 'searchProducts'])
-        ->name('product-entries.search-products');
     
-    // Rotas de Parâmetros
-    Route::get('/parameters', [ParameterController::class, 'index'])->name('parameters.index');
-    Route::put('/parameters', [ParameterController::class, 'update'])->name('parameters.update');
-    Route::post('/parameters', [ParameterController::class, 'store'])->name('parameters.store');
+    // Marcas
+    Route::resource('brands', BrandController::class);
     
-    // Rotas para Marcas
-    Route::middleware(['auth'])->group(function () {
-        Route::get('/', [HomeController::class, 'index'])->name('home');
-        
-        Route::resource('brands', BrandController::class);
-    });
-    
-    // Rotas para Fornecedores
+    // Fornecedores
     Route::resource('suppliers', SupplierController::class);
+    Route::patch('suppliers/{supplier}/toggle-status', [SupplierController::class, 'toggleStatus'])->name('suppliers.toggle-status');
     
-    // Rota de teste de email
+    // Parâmetros
+    Route::get('/parameters', [ParameterController::class, 'index'])->name('parameters.index');
+    Route::post('/parameters', [ParameterController::class, 'store'])->name('parameters.store');
+    Route::put('/parameters/smtp', [ParameterController::class, 'updateSmtp'])->name('parameters.update-smtp');
+    
+    // Teste de E-mail
     Route::post('/test-email', function (Request $request) {
         try {
             $request->validate([
                 'test_email' => 'required|email'
             ]);
 
-            $recipientEmail = $request->test_email;
-            \Log::info('Tentando enviar email para: ' . $recipientEmail);
+            \Log::info('Iniciando teste de email para: ' . $request->test_email);
+
+            // Carregar configurações SMTP atualizadas
+            if (!file_exists(config_path('smtp_config.php'))) {
+                throw new \Exception('Configurações SMTP não encontradas. Por favor, configure o SMTP primeiro.');
+            }
+
+            $smtpConfig = include(config_path('smtp_config.php'));
+            \Log::info('Configurações SMTP carregadas:', $smtpConfig);
             
-            $emailService = new \App\Services\EmailService();
-            $emailService->sendTest($recipientEmail);
+            // Verificar se todas as configurações necessárias existem
+            $requiredKeys = ['host', 'port', 'encryption', 'username', 'password', 'scheme'];
+            foreach ($requiredKeys as $key) {
+                if (!isset($smtpConfig[$key])) {
+                    throw new \Exception("Configuração SMTP incompleta. Falta o parâmetro: {$key}");
+                }
+            }
+
+            // Configurar o SMTP em tempo real
+            $mailConfig = [
+                'mail.default' => 'smtp',
+                'mail.mailers.smtp.transport' => 'smtp',
+                'mail.mailers.smtp.host' => $smtpConfig['host'],
+                'mail.mailers.smtp.port' => $smtpConfig['port'],
+                'mail.mailers.smtp.encryption' => $smtpConfig['encryption'],
+                'mail.mailers.smtp.username' => $smtpConfig['username'],
+                'mail.mailers.smtp.password' => $smtpConfig['password'],
+                'mail.mailers.smtp.scheme' => $smtpConfig['scheme'],
+                'mail.from.address' => $smtpConfig['username'],
+                'mail.from.name' => config('app.name', 'Sistema de Estoque')
+            ];
+
+            \Log::info('Aplicando configurações de email:', $mailConfig);
+            config($mailConfig);
+
+            // Reconfigurar o mailer com as novas configurações
+            \Illuminate\Support\Facades\Mail::purge('smtp');
             
+            // Tentar estabelecer conexão SMTP antes de enviar
+            try {
+                $transport = new \Symfony\Component\Mailer\Transport\Smtp\EsmtpTransport(
+                    $smtpConfig['host'],
+                    $smtpConfig['port'],
+                    $smtpConfig['encryption'] === 'ssl'
+                );
+                $transport->setUsername($smtpConfig['username']);
+                $transport->setPassword($smtpConfig['password']);
+                
+                \Log::info('Testando conexão SMTP...');
+                $transport->start();
+                \Log::info('Conexão SMTP estabelecida com sucesso');
+                $transport->stop();
+            } catch (\Exception $e) {
+                \Log::error('Erro na conexão SMTP: ' . $e->getMessage());
+                throw new \Exception('Não foi possível estabelecer conexão com o servidor SMTP: ' . $e->getMessage());
+            }
+            
+            // Enviar o email
+            \Log::info('Enviando email de teste...');
+            Mail::to($request->test_email)->send(new TestEmail());
             \Log::info('Email enviado com sucesso');
             
-            return redirect()->back()
-                ->with('success', 'Email de teste enviado com sucesso para ' . $recipientEmail);
+            return response()->json(['message' => 'E-mail de teste enviado com sucesso!']);
         } catch (\Exception $e) {
-            \Log::error('Erro ao enviar email: ' . $e->getMessage());
-            \Log::error($e->getTraceAsString());
-            
-            return redirect()->back()
-                ->with('error', 'Erro ao enviar email: ' . $e->getMessage());
+            \Log::error('Erro ao enviar e-mail de teste: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            return response()->json([
+                'error' => 'Erro ao enviar e-mail: ' . $e->getMessage(),
+                'details' => [
+                    'message' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine()
+                ]
+            ], 500);
         }
-    })->name('test-email');
-});
-
-// Rota inicial
-Route::get('/', function () {
-    return redirect()->route('home');
+    })->name('test.email')->middleware('auth');
 });

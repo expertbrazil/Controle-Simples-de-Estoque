@@ -23,17 +23,28 @@
                 
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label for="name" class="form-label">Nome <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name" value="{{ old('name') }}" required>
-                        @error('name')
+                        <label for="nome" class="form-label">Nome <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control @error('nome') is-invalid @enderror" id="nome" name="nome" value="{{ old('nome') }}" required>
+                        @error('nome')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
 
-                    <div class="col-md-6 mb-3">
-                        <label for="cnpj" class="form-label">CNPJ</label>
-                        <input type="text" class="form-control @error('cnpj') is-invalid @enderror" id="cnpj" name="cnpj" value="{{ old('cnpj') }}">
-                        @error('cnpj')
+                    <div class="col-md-2 mb-3">
+                        <label for="tipo_pessoa" class="form-label">Tipo Pessoa <span class="text-danger">*</span></label>
+                        <select class="form-select @error('tipo_pessoa') is-invalid @enderror" id="tipo_pessoa" name="tipo_pessoa" required>
+                            <option value="J" {{ old('tipo_pessoa') == 'J' ? 'selected' : '' }}>Jurídica</option>
+                            <option value="F" {{ old('tipo_pessoa') == 'F' ? 'selected' : '' }}>Física</option>
+                        </select>
+                        @error('tipo_pessoa')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label for="documento" class="form-label">CPF/CNPJ <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control @error('documento') is-invalid @enderror" id="documento" name="documento" value="{{ old('documento') }}" required>
+                        @error('documento')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
@@ -67,17 +78,25 @@
 
                 <div class="row">
                     <div class="col-md-4 mb-3">
-                        <label for="zip_code" class="form-label">CEP</label>
-                        <input type="text" class="form-control @error('zip_code') is-invalid @enderror" id="zip_code" name="zip_code" value="{{ old('zip_code') }}">
-                        @error('zip_code')
+                        <label for="cep" class="form-label">CEP</label>
+                        <input type="text" class="form-control @error('cep') is-invalid @enderror" id="cep" name="cep" value="{{ old('cep') }}">
+                        @error('cep')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
 
-                    <div class="col-md-8 mb-3">
-                        <label for="address" class="form-label">Endereço</label>
-                        <input type="text" class="form-control @error('address') is-invalid @enderror" id="address" name="address" value="{{ old('address') }}">
-                        @error('address')
+                    <div class="col-md-6 mb-3">
+                        <label for="rua" class="form-label">Rua</label>
+                        <input type="text" class="form-control @error('rua') is-invalid @enderror" id="rua" name="rua" value="{{ old('rua') }}">
+                        @error('rua')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="col-md-2 mb-3">
+                        <label for="numero" class="form-label">Número</label>
+                        <input type="text" class="form-control @error('numero') is-invalid @enderror" id="numero" name="numero" value="{{ old('numero') }}">
+                        @error('numero')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
@@ -85,54 +104,64 @@
 
                 <div class="row">
                     <div class="col-md-4 mb-3">
-                        <label for="neighborhood" class="form-label">Bairro</label>
-                        <input type="text" class="form-control @error('neighborhood') is-invalid @enderror" id="neighborhood" name="neighborhood" value="{{ old('neighborhood') }}">
-                        @error('neighborhood')
+                        <label for="complemento" class="form-label">Complemento</label>
+                        <input type="text" class="form-control @error('complemento') is-invalid @enderror" id="complemento" name="complemento" value="{{ old('complemento') }}">
+                        @error('complemento')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
 
                     <div class="col-md-4 mb-3">
-                        <label for="city" class="form-label">Cidade</label>
-                        <input type="text" class="form-control @error('city') is-invalid @enderror" id="city" name="city" value="{{ old('city') }}">
-                        @error('city')
+                        <label for="bairro" class="form-label">Bairro</label>
+                        <input type="text" class="form-control @error('bairro') is-invalid @enderror" id="bairro" name="bairro" value="{{ old('bairro') }}">
+                        @error('bairro')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
 
                     <div class="col-md-4 mb-3">
-                        <label for="state" class="form-label">Estado</label>
-                        <select class="form-select @error('state') is-invalid @enderror" id="state" name="state">
-                            <option value="">Selecione...</option>
-                            <option value="AC" {{ old('state') == 'AC' ? 'selected' : '' }}>Acre</option>
-                            <option value="AL" {{ old('state') == 'AL' ? 'selected' : '' }}>Alagoas</option>
-                            <option value="AP" {{ old('state') == 'AP' ? 'selected' : '' }}>Amapá</option>
-                            <option value="AM" {{ old('state') == 'AM' ? 'selected' : '' }}>Amazonas</option>
-                            <option value="BA" {{ old('state') == 'BA' ? 'selected' : '' }}>Bahia</option>
-                            <option value="CE" {{ old('state') == 'CE' ? 'selected' : '' }}>Ceará</option>
-                            <option value="DF" {{ old('state') == 'DF' ? 'selected' : '' }}>Distrito Federal</option>
-                            <option value="ES" {{ old('state') == 'ES' ? 'selected' : '' }}>Espírito Santo</option>
-                            <option value="GO" {{ old('state') == 'GO' ? 'selected' : '' }}>Goiás</option>
-                            <option value="MA" {{ old('state') == 'MA' ? 'selected' : '' }}>Maranhão</option>
-                            <option value="MT" {{ old('state') == 'MT' ? 'selected' : '' }}>Mato Grosso</option>
-                            <option value="MS" {{ old('state') == 'MS' ? 'selected' : '' }}>Mato Grosso do Sul</option>
-                            <option value="MG" {{ old('state') == 'MG' ? 'selected' : '' }}>Minas Gerais</option>
-                            <option value="PA" {{ old('state') == 'PA' ? 'selected' : '' }}>Pará</option>
-                            <option value="PB" {{ old('state') == 'PB' ? 'selected' : '' }}>Paraíba</option>
-                            <option value="PR" {{ old('state') == 'PR' ? 'selected' : '' }}>Paraná</option>
-                            <option value="PE" {{ old('state') == 'PE' ? 'selected' : '' }}>Pernambuco</option>
-                            <option value="PI" {{ old('state') == 'PI' ? 'selected' : '' }}>Piauí</option>
-                            <option value="RJ" {{ old('state') == 'RJ' ? 'selected' : '' }}>Rio de Janeiro</option>
-                            <option value="RN" {{ old('state') == 'RN' ? 'selected' : '' }}>Rio Grande do Norte</option>
-                            <option value="RS" {{ old('state') == 'RS' ? 'selected' : '' }}>Rio Grande do Sul</option>
-                            <option value="RO" {{ old('state') == 'RO' ? 'selected' : '' }}>Rondônia</option>
-                            <option value="RR" {{ old('state') == 'RR' ? 'selected' : '' }}>Roraima</option>
-                            <option value="SC" {{ old('state') == 'SC' ? 'selected' : '' }}>Santa Catarina</option>
-                            <option value="SP" {{ old('state') == 'SP' ? 'selected' : '' }}>São Paulo</option>
-                            <option value="SE" {{ old('state') == 'SE' ? 'selected' : '' }}>Sergipe</option>
-                            <option value="TO" {{ old('state') == 'TO' ? 'selected' : '' }}>Tocantins</option>
+                        <label for="cidade" class="form-label">Cidade</label>
+                        <input type="text" class="form-control @error('cidade') is-invalid @enderror" id="cidade" name="cidade" value="{{ old('cidade') }}">
+                        @error('cidade')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="uf" class="form-label">Estado</label>
+                        <select class="form-select @error('uf') is-invalid @enderror" id="uf" name="uf">
+                            <option value="">Selecione o estado</option>
+                            <option value="AC" {{ old('uf') == 'AC' ? 'selected' : '' }}>Acre</option>
+                            <option value="AL" {{ old('uf') == 'AL' ? 'selected' : '' }}>Alagoas</option>
+                            <option value="AP" {{ old('uf') == 'AP' ? 'selected' : '' }}>Amapá</option>
+                            <option value="AM" {{ old('uf') == 'AM' ? 'selected' : '' }}>Amazonas</option>
+                            <option value="BA" {{ old('uf') == 'BA' ? 'selected' : '' }}>Bahia</option>
+                            <option value="CE" {{ old('uf') == 'CE' ? 'selected' : '' }}>Ceará</option>
+                            <option value="DF" {{ old('uf') == 'DF' ? 'selected' : '' }}>Distrito Federal</option>
+                            <option value="ES" {{ old('uf') == 'ES' ? 'selected' : '' }}>Espírito Santo</option>
+                            <option value="GO" {{ old('uf') == 'GO' ? 'selected' : '' }}>Goiás</option>
+                            <option value="MA" {{ old('uf') == 'MA' ? 'selected' : '' }}>Maranhão</option>
+                            <option value="MT" {{ old('uf') == 'MT' ? 'selected' : '' }}>Mato Grosso</option>
+                            <option value="MS" {{ old('uf') == 'MS' ? 'selected' : '' }}>Mato Grosso do Sul</option>
+                            <option value="MG" {{ old('uf') == 'MG' ? 'selected' : '' }}>Minas Gerais</option>
+                            <option value="PA" {{ old('uf') == 'PA' ? 'selected' : '' }}>Pará</option>
+                            <option value="PB" {{ old('uf') == 'PB' ? 'selected' : '' }}>Paraíba</option>
+                            <option value="PR" {{ old('uf') == 'PR' ? 'selected' : '' }}>Paraná</option>
+                            <option value="PE" {{ old('uf') == 'PE' ? 'selected' : '' }}>Pernambuco</option>
+                            <option value="PI" {{ old('uf') == 'PI' ? 'selected' : '' }}>Piauí</option>
+                            <option value="RJ" {{ old('uf') == 'RJ' ? 'selected' : '' }}>Rio de Janeiro</option>
+                            <option value="RN" {{ old('uf') == 'RN' ? 'selected' : '' }}>Rio Grande do Norte</option>
+                            <option value="RS" {{ old('uf') == 'RS' ? 'selected' : '' }}>Rio Grande do Sul</option>
+                            <option value="RO" {{ old('uf') == 'RO' ? 'selected' : '' }}>Rondônia</option>
+                            <option value="RR" {{ old('uf') == 'RR' ? 'selected' : '' }}>Roraima</option>
+                            <option value="SC" {{ old('uf') == 'SC' ? 'selected' : '' }}>Santa Catarina</option>
+                            <option value="SP" {{ old('uf') == 'SP' ? 'selected' : '' }}>São Paulo</option>
+                            <option value="SE" {{ old('uf') == 'SE' ? 'selected' : '' }}>Sergipe</option>
+                            <option value="TO" {{ old('uf') == 'TO' ? 'selected' : '' }}>Tocantins</option>
                         </select>
-                        @error('state')
+                        @error('uf')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
@@ -167,24 +196,63 @@
 @push('scripts')
 <script>
 $(document).ready(function() {
-    $('#cnpj').mask('00.000.000/0000-00');
+    // Máscaras dos campos
+    $('#documento').mask('00.000.000/0000-00');
     $('#phone').mask('(00) 00000-0000');
     $('#whatsapp').mask('(00) 00000-0000');
-    $('#zip_code').mask('00000-000');
+    $('#cep').mask('00000-000');
 
-    $('#zip_code').on('blur', function() {
-        var cep = $(this).val().replace(/\D/g, '');
-        if (cep.length === 8) {
-            $.get(`https://viacep.com.br/ws/${cep}/json/`, function(data) {
-                if (!data.erro) {
-                    $('#address').val(data.logradouro);
-                    $('#neighborhood').val(data.bairro);
-                    $('#city').val(data.localidade);
-                    $('#state').val(data.uf);
-                }
-            });
+    // Atualiza a máscara quando o tipo de pessoa muda
+    $('#tipo_pessoa').change(function() {
+        var tipo = $(this).val();
+        var doc = $('#documento');
+        doc.val(''); // Limpa o campo
+        if (tipo === 'F') {
+            doc.mask('000.000.000-00');
+        } else {
+            doc.mask('00.000.000/0000-00');
         }
     });
+
+    // Busca CEP
+    $('#cep').blur(function() {
+        var cep = $(this).val().replace(/\D/g, '');
+        
+        if (cep != "") {
+            var validacep = /^[0-9]{8}$/;
+            
+            if(validacep.test(cep)) {
+                $('#rua').val('...');
+                $('#bairro').val('...');
+                $('#cidade').val('...');
+                $('#uf').val('...');
+
+                $.getJSON("https://viacep.com.br/ws/"+ cep +"/json/?callback=?", function(dados) {
+                    if (!("erro" in dados)) {
+                        $('#rua').val(dados.logradouro);
+                        $('#bairro').val(dados.bairro);
+                        $('#cidade').val(dados.localidade);
+                        $('#uf').val(dados.uf);
+                    } else {
+                        limpa_formulario_cep();
+                        alert("CEP não encontrado.");
+                    }
+                });
+            } else {
+                limpa_formulario_cep();
+                alert("Formato de CEP inválido.");
+            }
+        } else {
+            limpa_formulario_cep();
+        }
+    });
+
+    function limpa_formulario_cep() {
+        $('#rua').val('');
+        $('#bairro').val('');
+        $('#cidade').val('');
+        $('#uf').val('');
+    }
 });
 </script>
 @endpush

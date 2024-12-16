@@ -10,58 +10,137 @@ class Supplier extends Model
 {
     use HasFactory, SoftDeletes;
 
+    protected $table = 'suppliers';
+
+    const PESSOA_FISICA = 'F';
+    const PESSOA_JURIDICA = 'J';
+
     protected $fillable = [
-        'name',
-        'cnpj',
+        'nome',
+        'tipo_pessoa',
+        'documento',
+        'email',
         'phone',
         'whatsapp',
-        'email',
-        'address',
-        'neighborhood',
-        'city',
-        'state',
-        'zip_code',
-        'contact_name',
-        'active'
+        'cep',
+        'rua',
+        'numero',
+        'complemento',
+        'bairro',
+        'cidade',
+        'uf',
+        'status'
     ];
 
     protected $casts = [
-        'active' => 'boolean'
+        'status' => 'boolean',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'deleted_at' => 'datetime'
     ];
 
     protected $attributes = [
-        'active' => true
+        'status' => true,
+        'tipo_pessoa' => self::PESSOA_JURIDICA
     ];
 
+    // Formatação do documento (CPF/CNPJ)
+    public function getFormattedDocumentoAttribute()
+    {
+        $doc = preg_replace('/[^0-9]/', '', $this->documento);
+        
+        // Se for pessoa física (CPF)
+        if ($this->tipo_pessoa === self::PESSOA_FISICA) {
+            if (strlen($doc) !== 11) return $this->documento;
+            return substr($doc, 0, 3) . '.' . 
+                   substr($doc, 3, 3) . '.' . 
+                   substr($doc, 6, 3) . '-' . 
+                   substr($doc, 9, 2);
+        }
+        
+        // Se for pessoa jurídica (CNPJ)
+        if (strlen($doc) !== 14) return $this->documento;
+        return substr($doc, 0, 2) . '.' . 
+               substr($doc, 2, 3) . '.' . 
+               substr($doc, 5, 3) . '/' . 
+               substr($doc, 8, 4) . '-' . 
+               substr($doc, 12, 2);
+    }
+
+    // Relacionamentos
     public function products()
     {
         return $this->hasMany(Product::class);
     }
 
+    // Formatação do telefone
     public function getFormattedPhoneAttribute()
     {
         $phone = preg_replace('/[^0-9]/', '', $this->phone);
-        if (strlen($phone) === 11) {
-            return '(' . substr($phone, 0, 2) . ') ' . substr($phone, 2, 5) . '-' . substr($phone, 7);
+        $length = strlen($phone);
+
+        if ($length === 11) {
+            return '(' . substr($phone, 0, 2) . ') ' . 
+                   substr($phone, 2, 5) . '-' . 
+                   substr($phone, 7);
         }
-        return $this->phone;
+
+        if ($length === 10) {
+            return '(' . substr($phone, 0, 2) . ') ' . 
+                   substr($phone, 2, 4) . '-' . 
+                   substr($phone, 6);
+        }
+
+        return $phone;
     }
 
+    // Formatação do WhatsApp
     public function getFormattedWhatsappAttribute()
     {
         $whatsapp = preg_replace('/[^0-9]/', '', $this->whatsapp);
-        if (strlen($whatsapp) === 11) {
-            return '(' . substr($whatsapp, 0, 2) . ') ' . substr($whatsapp, 2, 5) . '-' . substr($whatsapp, 7);
-        }
-        return $this->whatsapp;
+        return '(' . substr($whatsapp, 0, 2) . ') ' . 
+               substr($whatsapp, 2, 5) . '-' . 
+               substr($whatsapp, 7);
     }
 
-    public function getFormattedCnpjAttribute()
+    // Formatação do CEP
+    public function getFormattedCepAttribute()
     {
-        $cnpj = preg_replace('/[^0-9]/', '', $this->cnpj);
-        if (strlen($cnpj) === 14) {
-            return substr($cnpj, 0, 2) . '.' . substr($cnpj, 2, 3) . '.' . substr($cnpj, 5, 3) . '/' . substr($cnpj, 8, 4) . '-' . substr($cnpj, 12);
-        }
-        return $this->cnpj;
+        $cep = preg_replace('/[^0-9]/', '', $this->cep);
+        return substr($cep, 0, 5) . '-' . substr($cep, 5, 3);
+    }
+
+    // Endereço completo
+    public function getFullAddressAttribute()
+    {
+        $address = $this->rua;
+        if ($this->numero) $address .= ', ' . $this->numero;
+        if ($this->complemento) $address .= ' - ' . $this->complemento;
+        if ($this->bairro) $address .= ', ' . $this->bairro;
+        $address .= ' - ' . $this->cidade . '/' . $this->uf;
+        if ($this->cep) $address .= ' - CEP: ' . $this->getFormattedCepAttribute();
+        
+        return $address;
+    }
+
+    // Scopes
+    public function scopeActive($query)
+    {
+        return $query->where('status', true);
+    }
+
+    public function scopeInactive($query)
+    {
+        return $query->where('status', false);
+    }
+
+    public function scopePessoaFisica($query)
+    {
+        return $query->where('tipo_pessoa', self::PESSOA_FISICA);
+    }
+
+    public function scopePessoaJuridica($query)
+    {
+        return $query->where('tipo_pessoa', self::PESSOA_JURIDICA);
     }
 }
