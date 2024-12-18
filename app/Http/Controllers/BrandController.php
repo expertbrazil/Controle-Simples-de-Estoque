@@ -21,21 +21,37 @@ class BrandController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required|max:255',
-            'description' => 'nullable|max:1000',
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
             'status' => 'boolean'
         ]);
 
         try {
-            $data = $request->all();
-            $data['status'] = $request->has('status');
+            // Garante que status seja um booleano
+            $validated['status'] = $request->has('status') && $request->status == '1';
             
-            Brand::create($data);
-            return redirect()->route('brands.index')->with('success', 'Marca cadastrada com sucesso!');
+            $brand = Brand::create($validated);
+
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Marca cadastrada com sucesso.',
+                    'brand' => $brand
+                ]);
+            }
+
+            return redirect()->route('brands.index')
+                ->with('success', 'Marca cadastrada com sucesso.');
         } catch (\Exception $e) {
-            Log::error('Erro ao cadastrar marca: ' . $e->getMessage());
-            return back()->with('error', 'Erro ao cadastrar marca. Por favor, tente novamente.');
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Erro ao cadastrar marca.'
+                ], 500);
+            }
+
+            return redirect()->route('brands.index')
+                ->with('error', 'Erro ao cadastrar marca.');
         }
     }
 
@@ -72,6 +88,25 @@ class BrandController extends Controller
         } catch (\Exception $e) {
             Log::error('Erro ao excluir marca: ' . $e->getMessage());
             return back()->with('error', 'Erro ao excluir marca. Por favor, tente novamente.');
+        }
+    }
+
+    public function toggleStatus(Brand $brand)
+    {
+        try {
+            $brand->status = !$brand->status;
+            $brand->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Status da marca atualizado com sucesso!'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Erro ao atualizar status da marca: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao atualizar status da marca'
+            ], 500);
         }
     }
 }

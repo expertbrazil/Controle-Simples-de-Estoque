@@ -11,6 +11,7 @@ use App\Models\SaleItem;
 use App\Models\ProductEntry;
 use App\Models\Brand;
 use App\Models\Supplier;
+use App\Models\PriceHistory;
 
 class Product extends Model
 {
@@ -77,9 +78,8 @@ class Product extends Model
         'formatted_consumer_price',
         'formatted_distributor_price',
         'formatted_last_purchase_price',
-        'formatted_freight_cost',
-        'formatted_unit_cost',
-        'formatted_weight'
+        'formatted_weight',
+        'supplier_name'
     ];
 
     // Relacionamentos
@@ -95,7 +95,15 @@ class Product extends Model
 
     public function supplier()
     {
-        return $this->belongsTo(Supplier::class);
+        return $this->belongsTo(Supplier::class)
+            ->withDefault([
+                'nome_display' => 'Fornecedor não encontrado'
+            ]);
+    }
+
+    public function priceHistory()
+    {
+        return $this->hasMany(PriceHistory::class)->orderBy('created_at', 'desc');
     }
 
     public function sales()
@@ -108,14 +116,19 @@ class Product extends Model
         return $this->hasMany(ProductEntry::class);
     }
 
-    // Atributos
-    public function getImageUrlAttribute()
+    // Acessor para exibir o nome correto do fornecedor baseado no tipo (PF ou PJ)
+    public function getSupplierNameAttribute()
     {
-        return $this->image
-            ? "/images/produtos/{$this->image}"
-            : "/images/nova_rosa_callback_ok.webp";
+        if (!$this->supplier) {
+            return 'Fornecedor não encontrado';
+        }
+
+        return $this->supplier->tipo_pessoa === 'PF' 
+            ? $this->supplier->nome_completo 
+            : $this->supplier->razao_social;
     }
 
+    // Acessores para formatação de valores
     public function getFormattedConsumerPriceAttribute()
     {
         return 'R$ ' . number_format($this->consumer_price, 2, ',', '.');
@@ -131,19 +144,16 @@ class Product extends Model
         return 'R$ ' . number_format($this->last_purchase_price, 2, ',', '.');
     }
 
-    public function getFormattedFreightCostAttribute()
-    {
-        return 'R$ ' . number_format($this->freight_cost, 2, ',', '.');
-    }
-
-    public function getFormattedUnitCostAttribute()
-    {
-        return 'R$ ' . number_format($this->unit_cost, 2, ',', '.');
-    }
-
     public function getFormattedWeightAttribute()
     {
         return number_format($this->weight_kg, 3, ',', '.') . ' kg';
+    }
+
+    public function getImageUrlAttribute()
+    {
+        return $this->image 
+            ? "/images/produtos/{$this->image}" 
+            : "/images/nova_rosa_callback_ok.webp";
     }
 
     // Métodos

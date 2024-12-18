@@ -37,10 +37,12 @@
                         </div>
 
                         <div class="form-group row mb-3">
-                            <label for="active" class="col-md-4 col-form-label text-md-right">{{ __('Ativo') }}</label>
+                            <label for="status" class="col-md-4 col-form-label text-md-right">{{ __('Ativo') }}</label>
                             <div class="col-md-6">
-                                <div class="form-check">
-                                    <input type="checkbox" class="form-check-input" id="active" name="active" value="1" {{ old('active', $brand->active) ? 'checked' : '' }}>
+                                <div class="form-check form-switch">
+                                    <input type="hidden" name="status" value="0">
+                                    <input type="checkbox" class="form-check-input" id="status" name="status" value="1" {{ old('status', $brand->status) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="status">Marca Ativa</label>
                                 </div>
                             </div>
                         </div>

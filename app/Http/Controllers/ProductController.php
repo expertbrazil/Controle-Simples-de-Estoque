@@ -6,6 +6,7 @@ use App\Models\Product;
 use App\Models\Category;
 use App\Models\Brand;
 use App\Models\Supplier;
+use App\Models\PriceHistory;
 use App\Rules\ProductValidation;
 use App\Services\ImageService;
 use Illuminate\Http\Request;
@@ -24,11 +25,31 @@ class ProductController extends BaseController
         $this->middleware('auth');
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $products = Product::with(['category', 'brand'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
+        $query = Product::with(['category', 'brand', 'supplier']);
+
+        // Filtro por nome/SKU/código de barras
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('sku', 'like', "%{$search}%")
+                  ->orWhere('barcode', 'like', "%{$search}%");
+            });
+        }
+
+        // Ordenação
+        $sortField = $request->input('sort', 'created_at');
+        $sortDirection = $request->input('direction', 'desc');
+        $query->orderBy($sortField, $sortDirection);
+
+        $products = $query->paginate(10)->withQueryString();
+
+        // Carregar dados para os filtros sem nenhuma validação
+        $categories = Category::orderBy('name')->get();
+        $brands = Brand::orderBy('name')->get();
+        $suppliers = Supplier::orderBy('nome')->get();
 
         $products->getCollection()->transform(function ($product) {
             $product->formatted_consumer_price = 'R$ ' . number_format($product->consumer_price, 2, ',', '.');
@@ -39,14 +60,30 @@ class ProductController extends BaseController
             return $product;
         });
         
-        return view('products.index', compact('products'));
+        return view('products.index', compact('products', 'categories', 'brands', 'suppliers'));
     }
 
     public function create()
     {
-        $categories = Category::where('status', true)->orderBy('name')->get();
-        $brands = Brand::where('status', true)->orderBy('name')->get();
-        $suppliers = Supplier::where('status', true)->orderBy('nome')->get();
+        // Carrega os dados disponíveis, mesmo que vazios
+        $categories = Category::where('status', true)
+            ->orderBy('name')
+            ->get();
+
+        $brands = Brand::where('status', true)
+            ->orderBy('name')
+            ->get();
+
+        $suppliers = Supplier::where('status', true)
+            ->orderBy('nome')
+            ->get()
+            ->map(function($supplier) {
+                // Se for pessoa jurídica, usa razão social, senão usa nome
+                $supplier->nome_display = $supplier->tipo_pessoa === 'J' 
+                    ? $supplier->razao_social 
+                    : $supplier->nome;
+                return $supplier;
+            });
 
         return view('products.create', compact('categories', 'brands', 'suppliers'));
     }
@@ -68,34 +105,19 @@ class ProductController extends BaseController
                 'consumer_price' => $prices['consumer_price'],
                 'distributor_price' => $prices['distributor_price'],
                 'image' => $validatedData['stored_image'] ?? null,
-                'active' => $request->has('active')
+                'status' => $request->has('status')
             ]);
 
-            // Remove formatação dos valores monetários
-            $moneyFields = ['last_purchase_price', 'freight_cost', 'consumer_price', 'distributor_price'];
-            foreach ($moneyFields as $field) {
-                if (isset($productData[$field])) {
-                    $productData[$field] = floatval(str_replace(['R$', '.', ','], ['', '', '.'], $productData[$field]));
-                }
-            }
-
-            // Remove formatação dos percentuais
-            $percentageFields = ['tax_percentage', 'consumer_markup', 'distributor_markup'];
-            foreach ($percentageFields as $field) {
-                if (isset($productData[$field])) {
-                    $productData[$field] = floatval(str_replace(['%', ','], ['', '.'], $productData[$field]));
-                }
-            }
-
-            // Remove formatação do peso
-            if (isset($productData['weight_kg'])) {
-                $productData['weight_kg'] = floatval(str_replace(['kg', ','], ['', '.'], $productData['weight_kg']));
-            }
+            // Remove formatação dos valores monetários e percentuais
+            $this->formatMonetaryAndPercentageFields($productData);
 
             DB::beginTransaction();
 
             // Cria o produto
             $product = Product::create($productData);
+
+            // Registra o histórico inicial de preços
+            $this->updatePrices($product, $productData, 'Cadastro inicial do produto');
 
             DB::commit();
 
@@ -116,35 +138,34 @@ class ProductController extends BaseController
 
     public function edit(Product $product)
     {
-        $categories = Category::where('status', true)->orderBy('name')->get();
-        $brands = Brand::where('status', true)->orderBy('name')->get();
-        $suppliers = Supplier::where('status', true)->orderBy('nome')->get();
+        $categories = Category::where('status', true)
+            ->orderBy('name')
+            ->get();
 
-        // Formata os valores monetários
-        $product->last_purchase_price = 'R$ ' . number_format($product->last_purchase_price, 2, ',', '.');
-        $product->freight_cost = 'R$ ' . number_format($product->freight_cost, 2, ',', '.');
-        $product->consumer_price = 'R$ ' . number_format($product->consumer_price, 2, ',', '.');
-        $product->distributor_price = 'R$ ' . number_format($product->distributor_price, 2, ',', '.');
-        
-        // Formata os percentuais
-        $product->tax_percentage = number_format($product->tax_percentage, 2, ',', '.') . '%';
-        $product->consumer_markup = number_format($product->consumer_markup, 2, ',', '.') . '%';
-        $product->distributor_markup = number_format($product->distributor_markup, 2, ',', '.') . '%';
-        
-        // Formata o peso
-        $product->weight_kg = number_format($product->weight_kg, 2, ',', '.') . ' kg';
+        $brands = Brand::where('status', true)
+            ->orderBy('name')
+            ->get();
+
+        $suppliers = Supplier::where('status', true)
+            ->orderBy('nome')
+            ->get()
+            ->map(function($supplier) {
+                // Se for pessoa jurídica, usa razão social, senão usa nome
+                $supplier->nome_display = $supplier->tipo_pessoa === 'J' 
+                    ? $supplier->razao_social 
+                    : $supplier->nome;
+                return $supplier;
+            });
 
         return view('products.edit', compact('product', 'categories', 'brands', 'suppliers'));
     }
 
     public function update(Request $request, Product $product)
     {
-        $rules = ProductValidation::rules();
-        
-        // Ajusta a regra unique do SKU para ignorar o produto atual
-        $rules['sku'] = 'required|string|max:50|unique:products,sku,' . $product->id;
-
-        $validatedData = $request->validate($rules, ProductValidation::messages());
+        $validatedData = $request->validate(
+            ProductValidation::rules($product->id),
+            ProductValidation::messages()
+        );
 
         try {
             // Calcula os preços
@@ -155,35 +176,19 @@ class ProductController extends BaseController
                 'unit_cost' => $prices['unit_cost'],
                 'consumer_price' => $prices['consumer_price'],
                 'distributor_price' => $prices['distributor_price'],
-                'image' => $validatedData['stored_image'] ?? $product->image,
-                'active' => $request->has('active')
+                'status' => $request->has('status')
             ]);
 
-            // Remove formatação dos valores monetários
-            $moneyFields = ['last_purchase_price', 'freight_cost', 'consumer_price', 'distributor_price'];
-            foreach ($moneyFields as $field) {
-                if (isset($productData[$field])) {
-                    $productData[$field] = floatval(str_replace(['R$', '.', ','], ['', '', '.'], $productData[$field]));
-                }
-            }
-
-            // Remove formatação dos percentuais
-            $percentageFields = ['tax_percentage', 'consumer_markup', 'distributor_markup'];
-            foreach ($percentageFields as $field) {
-                if (isset($productData[$field])) {
-                    $productData[$field] = floatval(str_replace(['%', ','], ['', '.'], $productData[$field]));
-                }
-            }
-
-            // Remove formatação do peso
-            if (isset($productData['weight_kg'])) {
-                $productData['weight_kg'] = floatval(str_replace(['kg', ','], ['', '.'], $productData['weight_kg']));
-            }
+            // Remove formatação dos valores monetários e percentuais
+            $this->formatMonetaryAndPercentageFields($productData);
 
             DB::beginTransaction();
 
             // Atualiza o produto
             $product->update($productData);
+
+            // Registra o histórico de preços
+            $this->updatePrices($product, $productData, 'Atualização do produto');
 
             DB::commit();
 
@@ -200,6 +205,47 @@ class ProductController extends BaseController
                 ->withInput()
                 ->with('error', 'Erro ao atualizar produto. Por favor, tente novamente.');
         }
+    }
+
+    protected function updatePrices(Product $product, array $data, string $reason = null)
+    {
+        $oldPrices = [
+            'last_purchase_price' => $product->last_purchase_price,
+            'unit_cost' => $product->unit_cost,
+            'consumer_price' => $product->consumer_price,
+            'distributor_price' => $product->distributor_price,
+        ];
+
+        $newPrices = [
+            'last_purchase_price' => $data['last_purchase_price'] ?? $product->last_purchase_price,
+            'unit_cost' => $data['unit_cost'] ?? $product->unit_cost,
+            'consumer_price' => $data['consumer_price'] ?? $product->consumer_price,
+            'distributor_price' => $data['distributor_price'] ?? $product->distributor_price,
+        ];
+
+        // Verifica se houve alteração em algum preço
+        $pricesChanged = false;
+        foreach ($newPrices as $field => $value) {
+            if (bccomp($value, $oldPrices[$field], 2) !== 0) {
+                $pricesChanged = true;
+                break;
+            }
+        }
+
+        // Se houve alteração, registra no histórico
+        if ($pricesChanged) {
+            PriceHistory::create([
+                'product_id' => $product->id,
+                'last_purchase_price' => $newPrices['last_purchase_price'],
+                'unit_cost' => $newPrices['unit_cost'],
+                'consumer_price' => $newPrices['consumer_price'],
+                'distributor_price' => $newPrices['distributor_price'],
+                'change_reason' => $reason,
+                'user_id' => auth()->id()
+            ]);
+        }
+
+        return $newPrices;
     }
 
     protected function calculatePrices($data)
@@ -229,5 +275,29 @@ class ProductController extends BaseController
             'consumer_price' => $consumerPrice,
             'distributor_price' => $distributorPrice
         ];
+    }
+
+    protected function formatMonetaryAndPercentageFields(array &$data)
+    {
+        // Remove formatação dos valores monetários
+        $moneyFields = ['last_purchase_price', 'freight_cost', 'consumer_price', 'distributor_price'];
+        foreach ($moneyFields as $field) {
+            if (isset($data[$field])) {
+                $data[$field] = floatval(str_replace(['R$', '.', ','], ['', '', '.'], $data[$field]));
+            }
+        }
+
+        // Remove formatação dos percentuais
+        $percentageFields = ['tax_percentage', 'consumer_markup', 'distributor_markup'];
+        foreach ($percentageFields as $field) {
+            if (isset($data[$field])) {
+                $data[$field] = floatval(str_replace(['%', ','], ['', '.'], $data[$field]));
+            }
+        }
+
+        // Remove formatação do peso
+        if (isset($data['weight_kg'])) {
+            $data['weight_kg'] = floatval(str_replace(['kg', ','], ['', '.'], $data['weight_kg']));
+        }
     }
 }

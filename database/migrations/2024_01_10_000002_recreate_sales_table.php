@@ -17,7 +17,7 @@ return new class extends Migration
 
         Schema::create('sales', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('customer_id')->nullable()->constrained()->onDelete('set null');
+            $table->foreignId('supplier_id')->nullable()->references('id')->on('suppliers')->onDelete('set null');
             $table->foreignId('user_id')->constrained();
             
             // Valores monetários
@@ -55,7 +55,7 @@ return new class extends Migration
 
         // Restaura os dados do backup se existir
         if (Schema::hasTable('sales_backup')) {
-            DB::statement('INSERT INTO sales (id, customer_id, user_id, subtotal_amount, discount_percent, discount_amount, total_amount, status, payment_method, payment_status, created_at, updated_at, deleted_at) SELECT id, customer_id, user_id, COALESCE(subtotal_amount, 0), COALESCE(discount_percent, 0), COALESCE(discount_amount, 0), COALESCE(total_amount, 0), COALESCE(status, "completed"), COALESCE(payment_method, "money"), COALESCE(payment_status, "paid"), created_at, updated_at, deleted_at FROM sales_backup');
+            DB::statement('INSERT INTO sales (id, supplier_id, user_id, subtotal_amount, discount_percent, discount_amount, total_amount, status, payment_method, payment_status, created_at, updated_at, deleted_at) SELECT id, customer_id, user_id, COALESCE(subtotal_amount, 0), COALESCE(discount_percent, 0), COALESCE(discount_amount, 0), COALESCE(total_amount, 0), COALESCE(status, "completed"), COALESCE(payment_method, "money"), COALESCE(payment_status, "paid"), created_at, updated_at, deleted_at FROM sales_backup');
             Schema::dropIfExists('sales_backup');
         }
     }

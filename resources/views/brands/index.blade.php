@@ -34,11 +34,12 @@
                             <td>{{ $brand->name }}</td>
                             <td>{{ $brand->description }}</td>
                             <td>
-                                @if($brand->status)
-                                    <span class="badge bg-success">Ativo</span>
-                                @else
-                                    <span class="badge bg-danger">Inativo</span>
-                                @endif
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" class="form-check-input toggle-status" 
+                                           data-id="{{ $brand->id }}"
+                                           data-route="{{ route('brands.toggle-status', $brand) }}"
+                                           {{ $brand->status ? 'checked' : '' }}>
+                                </div>
                             </td>
                             <td>
                                 <div class="btn-group">
@@ -71,3 +72,36 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Toggle de Status
+    $('.toggle-status').on('change', function() {
+        const checkbox = $(this);
+        const brandId = checkbox.data('id');
+        const route = checkbox.data('route');
+
+        $.ajax({
+            url: route,
+            type: 'POST',
+            data: {
+                _token: '{{ csrf_token() }}'
+            },
+            success: function(response) {
+                if (response.success) {
+                    toastr.success(response.message);
+                } else {
+                    toastr.error(response.message);
+                    checkbox.prop('checked', !checkbox.prop('checked')); // Reverte o estado
+                }
+            },
+            error: function() {
+                toastr.error('Erro ao atualizar o status');
+                checkbox.prop('checked', !checkbox.prop('checked')); // Reverte o estado
+            }
+        });
+    });
+});
+</script>
+@endpush

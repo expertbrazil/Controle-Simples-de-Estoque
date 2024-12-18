@@ -1,58 +1,63 @@
-<?php
-
 namespace App\Rules;
+
+use App\Rules\SkuValidation;
+use App\Rules\BarcodeValidation;
 
 class ProductValidation
 {
-    public static function rules()
+    public static function rules($product = null)
     {
         return [
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'sku' => 'required|string|max:50',
-            'barcode' => 'nullable|string|max:50',
-            'category_id' => 'required|exists:categories,id',
-            'brand_id' => 'required|exists:brands,id',
-            'supplier_id' => 'required|exists:suppliers,id',
-            'last_purchase_price' => ['required', 'regex:/^R\$\s*\d+(?:\.\d{3})*(?:,\d{2})?$/'],
-            'tax_percentage' => ['nullable', 'regex:/^\d+(?:,\d{1,2})?%?$/'],
-            'freight_cost' => ['nullable', 'regex:/^R\$\s*\d+(?:\.\d{3})*(?:,\d{2})?$/'],
-            'weight_kg' => ['nullable', 'regex:/^\d+(?:,\d{1,3})?(?:\s*kg)?$/'],
-            'unit_cost' => ['nullable', 'regex:/^R\$\s*\d+(?:\.\d{3})*(?:,\d{2})?$/'],
-            'consumer_markup' => ['nullable', 'regex:/^\d+(?:,\d{1,2})?%?$/'],
-            'consumer_price' => ['nullable', 'regex:/^R\$\s*\d+(?:\.\d{3})*(?:,\d{2})?$/'],
-            'distributor_markup' => ['nullable', 'regex:/^\d+(?:,\d{1,2})?%?$/'],
-            'distributor_price' => ['nullable', 'regex:/^R\$\s*\d+(?:\.\d{3})*(?:,\d{2})?$/'],
-            'active' => 'boolean',
-            'image' => 'nullable|image|max:2048'
+            'name' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'sku' => ['required', new SkuValidation($product)],
+            'barcode' => ['nullable', new BarcodeValidation($product)],
+            'category_id' => ['required', 'exists:categories,id'],
+            'brand_id' => ['required', 'exists:brands,id'],
+            'supplier_id' => ['required', 'exists:suppliers,id'],
+            'min_stock' => ['required', 'integer', 'min:0'],
+            'max_stock' => ['required', 'integer', 'min:0', 'gte:min_stock'],
+            'stock_quantity' => ['required', 'integer', 'min:0'],
+            'last_purchase_price' => ['required', 'string'],
+            'tax_percentage' => ['required', 'string'],
+            'freight_cost' => ['required', 'string'],
+            'weight_kg' => ['required', 'string'],
+            'consumer_markup' => ['required', 'string'],
+            'distributor_markup' => ['required', 'string'],
+            'image' => ['nullable', 'image', 'max:2048']
         ];
     }
 
     public static function messages()
     {
         return [
-            'name.required' => 'O nome do produto é obrigatório',
-            'name.max' => 'O nome não pode ter mais que 255 caracteres',
-            'sku.required' => 'O SKU é obrigatório',
-            'sku.max' => 'O SKU não pode ter mais que 50 caracteres',
-            'category_id.required' => 'A categoria é obrigatória',
-            'category_id.exists' => 'A categoria selecionada não existe',
-            'brand_id.required' => 'A marca é obrigatória',
-            'brand_id.exists' => 'A marca selecionada não existe',
-            'supplier_id.required' => 'O fornecedor é obrigatório',
-            'supplier_id.exists' => 'O fornecedor selecionado não existe',
-            'last_purchase_price.required' => 'O preço de compra é obrigatório',
-            'last_purchase_price.regex' => 'O preço de compra deve estar no formato R$ 0,00',
-            'tax_percentage.regex' => 'O percentual de impostos deve estar no formato 0,00%',
-            'freight_cost.regex' => 'O custo do frete deve estar no formato R$ 0,00',
-            'weight_kg.regex' => 'O peso deve estar no formato 0,000 kg',
-            'unit_cost.regex' => 'O custo unitário deve estar no formato R$ 0,00',
-            'consumer_markup.regex' => 'A margem de consumidor deve estar no formato 0,00%',
-            'consumer_price.regex' => 'O preço para consumidor deve estar no formato R$ 0,00',
-            'distributor_markup.regex' => 'A margem de distribuidor deve estar no formato 0,00%',
-            'distributor_price.regex' => 'O preço para distribuidor deve estar no formato R$ 0,00',
-            'image.image' => 'O arquivo deve ser uma imagem',
-            'image.max' => 'A imagem não pode ter mais que 2MB'
+            'name.required' => 'O nome do produto é obrigatório.',
+            'name.max' => 'O nome do produto não pode ter mais de 255 caracteres.',
+            'sku.required' => 'O SKU é obrigatório.',
+            'category_id.required' => 'A categoria é obrigatória.',
+            'category_id.exists' => 'A categoria selecionada é inválida.',
+            'brand_id.required' => 'A marca é obrigatória.',
+            'brand_id.exists' => 'A marca selecionada é inválida.',
+            'supplier_id.required' => 'O fornecedor é obrigatório.',
+            'supplier_id.exists' => 'O fornecedor selecionado é inválido.',
+            'min_stock.required' => 'O estoque mínimo é obrigatório.',
+            'min_stock.integer' => 'O estoque mínimo deve ser um número inteiro.',
+            'min_stock.min' => 'O estoque mínimo não pode ser negativo.',
+            'max_stock.required' => 'O estoque máximo é obrigatório.',
+            'max_stock.integer' => 'O estoque máximo deve ser um número inteiro.',
+            'max_stock.min' => 'O estoque máximo não pode ser negativo.',
+            'max_stock.gte' => 'O estoque máximo deve ser maior ou igual ao estoque mínimo.',
+            'stock_quantity.required' => 'A quantidade em estoque é obrigatória.',
+            'stock_quantity.integer' => 'A quantidade em estoque deve ser um número inteiro.',
+            'stock_quantity.min' => 'A quantidade em estoque não pode ser negativa.',
+            'last_purchase_price.required' => 'O preço de compra é obrigatório.',
+            'tax_percentage.required' => 'O percentual de impostos é obrigatório.',
+            'freight_cost.required' => 'O custo de frete é obrigatório.',
+            'weight_kg.required' => 'O peso é obrigatório.',
+            'consumer_markup.required' => 'A margem de lucro para consumidor é obrigatória.',
+            'distributor_markup.required' => 'A margem de lucro para distribuidor é obrigatória.',
+            'image.image' => 'O arquivo deve ser uma imagem.',
+            'image.max' => 'A imagem não pode ter mais de 2MB.'
         ];
     }
 }

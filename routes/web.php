@@ -46,6 +46,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/categories/get-categories', [CategoryController::class, 'getCategories'])
         ->name('categories.get-categories');
     Route::resource('categories', CategoryController::class);
+    Route::post('categories/{category}/toggle-status', [CategoryController::class, 'toggleStatus'])->name('categories.toggle-status');
     
     // Produtos
     Route::resource('products', ProductController::class);
@@ -70,10 +71,11 @@ Route::middleware('auth')->group(function () {
     
     // Marcas
     Route::resource('brands', BrandController::class);
+    Route::post('brands/{brand}/toggle-status', [BrandController::class, 'toggleStatus'])->name('brands.toggle-status');
     
     // Fornecedores
     Route::resource('suppliers', SupplierController::class);
-    Route::patch('suppliers/{supplier}/toggle-status', [SupplierController::class, 'toggleStatus'])->name('suppliers.toggle-status');
+    Route::post('suppliers/{supplier}/toggle-status', [SupplierController::class, 'toggleStatus'])->name('suppliers.toggle-status');
     
     // Parâmetros
     Route::get('/parameters', [ParameterController::class, 'index'])->name('parameters.index');

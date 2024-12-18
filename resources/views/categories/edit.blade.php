@@ -34,9 +34,9 @@
             
             <div class="mb-3">
                 <div class="form-check form-switch">
-                    <input type="checkbox" class="form-check-input" id="active" name="active" 
-                           {{ old('active', $category->active) ? 'checked' : '' }}>
-                    <label class="form-check-label" for="active">Categoria Ativa</label>
+                    <input type="hidden" name="status" value="0">
+                    <input type="checkbox" class="form-check-input" id="status" name="status" value="1" {{ old('status', $category->status) ? 'checked' : '' }}>
+                    <label class="form-check-label" for="status">Categoria Ativa</label>
                 </div>
             </div>
             

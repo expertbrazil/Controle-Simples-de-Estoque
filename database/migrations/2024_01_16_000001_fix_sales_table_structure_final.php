@@ -16,7 +16,7 @@ class FixSalesTableStructureFinal extends Migration
         // Drop and recreate the user_id column
         Schema::table('sales', function (Blueprint $table) {
             $table->dropColumn('user_id');
-            $table->foreignId('user_id')->after('customer_id')->constrained();
+            $table->foreignId('user_id')->after('supplier_id')->constrained();
         });
 
         // Add or update the remaining columns

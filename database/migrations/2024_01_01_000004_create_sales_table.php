@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('sales', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('customer_id')->nullable()->constrained()->onDelete('set null');
+            $table->foreignId('customer_id')->nullable()->references('id')->on('suppliers')->onDelete('set null');
             $table->foreignId('user_id')->constrained();
             $table->decimal('total_amount', 10, 2);
             $table->string('discount_type')->nullable();

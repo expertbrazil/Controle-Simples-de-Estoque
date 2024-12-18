@@ -96,23 +96,43 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Toggle de Status
+    $('.toggle-status').on('change', function() {
+        const checkbox = $(this);
+        const categoryId = checkbox.data('id');
+        const route = checkbox.data('route');
+
+        $.ajax({
+            url: route,
+            type: 'POST',
+            data: {
+                _token: '{{ csrf_token() }}'
+            },
+            success: function(response) {
+                if (response.success) {
+                    toastr.success(response.message);
+                } else {
+                    toastr.error(response.message);
+                    checkbox.prop('checked', !checkbox.prop('checked')); // Reverte o estado
+                }
+            },
+            error: function() {
+                toastr.error('Erro ao atualizar o status');
+                checkbox.prop('checked', !checkbox.prop('checked')); // Reverte o estado
+            }
+        });
+    });
+
     // Configuração do modal de subcategoria
     const subcategoryModal = document.getElementById('subcategoryModal');
     if (subcategoryModal) {
-        subcategoryModal.addEventListener('show.bs.modal', function (event) {
+        subcategoryModal.addEventListener('show.bs.modal', function(event) {
             const button = event.relatedTarget;
             const categoryId = button.getAttribute('data-category-id');
             const categoryName = button.getAttribute('data-category-name');
             
-            // Atualiza o ID da categoria pai
             document.getElementById('parent_id').value = categoryId;
-            
-            // Atualiza o título do modal
-            this.querySelector('.modal-title').textContent = `Nova Subcategoria de "${categoryName}"`;
-            
-            // Limpa o formulário
-            this.querySelector('form').reset();
-            document.getElementById('subcategory_active').checked = true;
+            document.querySelector('.modal-title').textContent = `Nova Subcategoria de ${categoryName}`;
         });
     }
 

@@ -33,47 +33,37 @@ class CategoryController extends Controller
 
     public function store(Request $request)
     {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'status' => 'boolean'
+        ]);
+
         try {
-            $validated = $request->validate([
-                'name' => 'required|string|max:255',
-                'parent_id' => 'nullable|exists:categories,id',
-                'status' => 'boolean'
-            ]);
+            // Garante que status seja um booleano
+            $validated['status'] = $request->has('status') && $request->status == '1';
+            
+            $category = Category::create($validated);
 
-            $data = [
-                'name' => $validated['name'],
-                'parent_id' => $validated['parent_id'] ?? null,
-                'status' => $request->has('status')
-            ];
-
-            $category = Category::create($data);
-
-            if ($request->wantsJson()) {
+            if ($request->ajax()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Categoria criada com sucesso!',
+                    'message' => 'Categoria cadastrada com sucesso.',
                     'category' => $category
                 ]);
             }
 
-            return redirect()
-                ->route('categories.index')
-                ->with('success', 'Categoria criada com sucesso!');
-
+            return redirect()->route('categories.index')
+                ->with('success', 'Categoria cadastrada com sucesso.');
         } catch (\Exception $e) {
-            Log::error('Erro ao criar categoria: ' . $e->getMessage());
-            
-            if ($request->wantsJson()) {
+            if ($request->ajax()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Erro ao criar categoria. Por favor, tente novamente.'
+                    'message' => 'Erro ao cadastrar categoria.'
                 ], 500);
             }
 
-            return redirect()
-                ->back()
-                ->withInput()
-                ->with('error', 'Erro ao criar categoria. Por favor, tente novamente.');
+            return redirect()->route('categories.index')
+                ->with('error', 'Erro ao cadastrar categoria.');
         }
     }
 
@@ -120,35 +110,33 @@ class CategoryController extends Controller
     public function destroy(Category $category)
     {
         try {
-            // Verificar se a categoria tem produtos associados
-            if ($category->products()->exists()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => '⚠️ Não é possível excluir esta categoria pois existem produtos vinculados a ela.'
-                ], 422);
-            }
-
-            // Verificar se a categoria tem subcategorias
             if ($category->children()->exists()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => '⚠️ Não é possível excluir esta categoria pois existem subcategorias vinculadas a ela.'
-                ], 422);
+                return back()->with('error', 'Não é possível excluir uma categoria que possui subcategorias.');
             }
-
+            
             $category->delete();
+            return redirect()->route('categories.index')->with('success', 'Categoria excluída com sucesso!');
+        } catch (\Exception $e) {
+            Log::error('Erro ao excluir categoria: ' . $e->getMessage());
+            return back()->with('error', 'Erro ao excluir categoria. Por favor, tente novamente.');
+        }
+    }
+
+    public function toggleStatus(Category $category)
+    {
+        try {
+            $category->status = !$category->status;
+            $category->save();
 
             return response()->json([
                 'success' => true,
-                'message' => '✅ Categoria excluída com sucesso!'
+                'message' => 'Status da categoria atualizado com sucesso!'
             ]);
-
         } catch (\Exception $e) {
-            \Log::error('Erro ao excluir categoria: ' . $e->getMessage());
-            
+            Log::error('Erro ao atualizar status da categoria: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => '❌ Erro ao excluir categoria. Por favor, tente novamente.'
+                'message' => 'Erro ao atualizar status da categoria'
             ], 500);
         }
     }

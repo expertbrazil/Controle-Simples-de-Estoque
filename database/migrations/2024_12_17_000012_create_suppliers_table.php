@@ -18,7 +18,7 @@ class CreateSuppliersTable extends Migration
             $table->boolean('status')->default(true);
             $table->string('nome_completo');
             $table->string('razao_social');
-            $table->string('documento');
+            $table->string('documento')->unique();
             $table->string('cep');
             $table->string('rua');
             $table->string('numero');

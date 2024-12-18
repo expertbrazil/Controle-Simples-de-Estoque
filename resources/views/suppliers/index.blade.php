@@ -94,34 +94,40 @@
 @push('scripts')
 <script>
     $(document).ready(function() {
+        // Toggle de Status
+        $('.toggle-status').on('change', function() {
+            const checkbox = $(this);
+            const supplierId = checkbox.data('id');
+            
+            $.ajax({
+                url: `/suppliers/${supplierId}/toggle-status`,
+                type: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        toastr.success(response.message);
+                    } else {
+                        toastr.error(response.message);
+                        checkbox.prop('checked', !checkbox.prop('checked')); // Reverte o estado
+                    }
+                },
+                error: function() {
+                    toastr.error('Erro ao atualizar o status');
+                    checkbox.prop('checked', !checkbox.prop('checked')); // Reverte o estado
+                }
+            });
+        });
+
         // Confirma exclusão
         $('.delete-form').on('submit', function(e) {
             e.preventDefault();
             const form = $(this);
             
             if (confirm('Tem certeza que deseja excluir este fornecedor?')) {
-                $.ajax({
-                    url: form.attr('action'),
-                    type: 'POST',
-                    data: form.serialize(),
-                    success: function(response) {
-                        window.location.reload();
-                    },
-                    error: function(xhr) {
-                        alert('Erro ao excluir fornecedor: ' + xhr.responseText);
-                    }
-                });
+                form.off('submit').submit();
             }
-        });
-
-        // Toggle status
-        $('.toggle-status').on('change', function() {
-            var id = $(this).data('id');
-            $.post(`/suppliers/${id}/toggle-status`, {
-                _token: '{{ csrf_token() }}'
-            }).fail(function() {
-                alert('Erro ao alterar o status do fornecedor');
-            });
         });
     });
 </script>

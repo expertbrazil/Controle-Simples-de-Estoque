@@ -1,41 +1,32 @@
 {{-- Linha da categoria --}}
 <tr>
-    <td>
-        {!! str_repeat('&nbsp;&nbsp;&nbsp;&nbsp;', $level) !!}
-        @if($level > 0)
-            └─
-        @endif
-        {{ $category->name }}
+    <td style="padding-left: {{ $level * 20 }}px">
+        <i class="bi bi-diagram-2 me-2"></i>{{ $category->name }}
     </td>
     <td>
-        @if($category->status)
-            <span class="badge bg-success">Ativa</span>
-        @else
-            <span class="badge bg-danger">Inativa</span>
-        @endif
+        <div class="form-check form-switch">
+            <input type="checkbox" class="form-check-input toggle-status" 
+                   data-id="{{ $category->id }}"
+                   data-route="{{ route('categories.toggle-status', $category) }}"
+                   {{ $category->status ? 'checked' : '' }}>
+        </div>
     </td>
     <td>
-        <div class="btn-group" role="group">
-            <button type="button" class="btn btn-sm btn-success" 
+        <div class="btn-group">
+            <button type="button" class="btn btn-sm btn-outline-secondary add-subcategory" 
                     data-bs-toggle="modal" 
                     data-bs-target="#subcategoryModal"
                     data-category-id="{{ $category->id }}"
-                    data-category-name="{{ $category->name }}"
-                    title="Adicionar Subcategoria">
+                    data-category-name="{{ $category->name }}">
                 <i class="bi bi-plus-lg"></i>
             </button>
-            <a href="{{ route('categories.edit', $category) }}" 
-               class="btn btn-sm btn-info text-white"
-               title="Editar">
+            <a href="{{ route('categories.edit', $category) }}" class="btn btn-sm btn-info">
                 <i class="bi bi-pencil-square"></i>
             </a>
-            <form action="{{ route('categories.destroy', $category) }}" 
-                  method="POST" class="d-inline delete-form">
+            <form action="{{ route('categories.destroy', $category) }}" method="POST" class="d-inline">
                 @csrf
                 @method('DELETE')
-                <button type="submit" class="btn btn-sm btn-danger ms-1" 
-                        onclick="return confirm('Tem certeza que deseja excluir esta categoria?')"
-                        title="Excluir">
+                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Tem certeza que deseja excluir esta categoria?')">
                     <i class="bi bi-trash"></i>
                 </button>
             </form>
