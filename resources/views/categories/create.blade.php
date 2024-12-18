@@ -35,11 +35,11 @@
                 
                 <div class="mb-3">
                     <div class="form-check form-switch">
-                        <input type="hidden" name="active" value="0">
-                        <input type="checkbox" class="form-check-input @error('active') is-invalid @enderror" 
-                               id="active" name="active" value="1" {{ old('active', true) ? 'checked' : '' }}>
-                        <label class="form-check-label" for="active">Categoria Ativa</label>
-                        @error('active')
+                        <input type="hidden" name="status" value="0">
+                        <input type="checkbox" class="form-check-input @error('status') is-invalid @enderror" 
+                               id="status" name="status" value="1" {{ old('status', true) ? 'checked' : '' }}>
+                        <label class="form-check-label" for="status">Categoria Ativa</label>
+                        @error('status')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>

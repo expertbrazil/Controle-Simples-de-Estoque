@@ -14,15 +14,15 @@ class Category extends Model
         'name',
         'parent_id',
         'description',
-        'active'
+        'status'
     ];
 
     protected $casts = [
-        'active' => 'boolean'
+        'status' => 'boolean'
     ];
 
     protected $attributes = [
-        'active' => true
+        'status' => true
     ];
 
     /**
@@ -47,7 +47,7 @@ class Category extends Model
     public static function getParentCategories()
     {
         return static::whereNull('parent_id')
-                    ->where('active', true)
+                    ->where('status', true)
                     ->orderBy('name')
                     ->get();
     }

@@ -36,10 +36,10 @@
                         </div>
 
                         <div class="form-group row mb-3">
-                            <label for="active" class="col-md-4 col-form-label text-md-right">{{ __('Ativo') }}</label>
+                            <label for="status" class="col-md-4 col-form-label text-md-right">{{ __('Ativo') }}</label>
                             <div class="col-md-6">
                                 <div class="form-check">
-                                    <input type="checkbox" class="form-check-input" id="active" name="active" value="1" {{ old('active', true) ? 'checked' : '' }}>
+                                    <input type="checkbox" class="form-check-input" id="status" name="status" value="1" {{ old('status', true) ? 'checked' : '' }}>
                                 </div>
                             </div>
                         </div>

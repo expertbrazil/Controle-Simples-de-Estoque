@@ -43,40 +43,43 @@ class Product extends Model
     protected $casts = [
         'min_stock' => 'integer',
         'max_stock' => 'integer',
-        'last_purchase_price' => 'float',
-        'tax_percentage' => 'float',
-        'freight_cost' => 'float',
-        'weight_kg' => 'float',
-        'unit_cost' => 'float',
-        'consumer_markup' => 'float',
-        'consumer_price' => 'float',
-        'distributor_markup' => 'float',
-        'distributor_price' => 'float',
-        'last_purchase_date' => 'datetime',
         'stock_quantity' => 'integer',
-        'minimum_stock' => 'integer',
+        'last_purchase_price' => 'decimal:2',
+        'tax_percentage' => 'decimal:2',
+        'freight_cost' => 'decimal:2',
+        'weight_kg' => 'decimal:3',
+        'unit_cost' => 'decimal:2',
+        'consumer_markup' => 'decimal:2',
+        'consumer_price' => 'decimal:2',
+        'distributor_markup' => 'decimal:2',
+        'distributor_price' => 'decimal:2',
         'active' => 'boolean'
     ];
 
     protected $attributes = [
         'stock_quantity' => 0,
-        'minimum_stock' => 5,
-        'consumer_markup' => '0.00',
-        'consumer_price' => '0.00',
-        'distributor_markup' => '0.00',
-        'distributor_price' => '0.00',
+        'min_stock' => 0,
+        'max_stock' => 0,
+        'last_purchase_price' => '0.00',
         'tax_percentage' => '0.00',
         'freight_cost' => '0.00',
         'weight_kg' => '0.000',
         'unit_cost' => '0.00',
-        'last_purchase_price' => '0.00',
+        'consumer_markup' => '0.00',
+        'consumer_price' => '0.00',
+        'distributor_markup' => '0.00',
+        'distributor_price' => '0.00',
         'active' => true
     ];
 
     protected $appends = [
-        'image_url', 
-        'calculated_consumer_price',
-        'calculated_distributor_price'
+        'image_url',
+        'formatted_consumer_price',
+        'formatted_distributor_price',
+        'formatted_last_purchase_price',
+        'formatted_freight_cost',
+        'formatted_unit_cost',
+        'formatted_weight'
     ];
 
     // Relacionamentos
@@ -105,92 +108,78 @@ class Product extends Model
         return $this->hasMany(ProductEntry::class);
     }
 
+    // Atributos
     public function getImageUrlAttribute()
     {
-        if ($this->image && Storage::disk('public')->exists($this->image)) {
-            return Storage::url($this->image);
-        }
-        return asset('images/no-image.png');
+        return $this->image
+            ? "/images/produtos/{$this->image}"
+            : "/images/nova_rosa_callback_ok.webp";
     }
 
-    public function setImageAttribute($value)
+    public function getFormattedConsumerPriceAttribute()
     {
-        if ($value && is_file($value)) {
-            if ($this->image && Storage::disk('public')->exists($this->image)) {
-                Storage::disk('public')->delete($this->image);
-            }
-            $this->attributes['image'] = $value->store('products', 'public');
-        }
+        return 'R$ ' . number_format($this->consumer_price, 2, ',', '.');
     }
 
-    // Mutator para garantir que o preço da última compra seja salvo corretamente
-    public function setLastPurchasePriceAttribute($value)
+    public function getFormattedDistributorPriceAttribute()
     {
-        if (is_string($value)) {
-            $value = str_replace(['.', ','], ['', '.'], $value);
-        }
-        $this->attributes['last_purchase_price'] = $value;
+        return 'R$ ' . number_format($this->distributor_price, 2, ',', '.');
     }
 
-    // Accessor para formatar o preço da última compra
-    public function getLastPurchasePriceFormattedAttribute()
+    public function getFormattedLastPurchasePriceAttribute()
     {
-        return number_format($this->last_purchase_price, 2, ',', '.');
+        return 'R$ ' . number_format($this->last_purchase_price, 2, ',', '.');
     }
 
-    // Calcula o custo por unidade (preço de compra + impostos + frete)
+    public function getFormattedFreightCostAttribute()
+    {
+        return 'R$ ' . number_format($this->freight_cost, 2, ',', '.');
+    }
+
+    public function getFormattedUnitCostAttribute()
+    {
+        return 'R$ ' . number_format($this->unit_cost, 2, ',', '.');
+    }
+
+    public function getFormattedWeightAttribute()
+    {
+        return number_format($this->weight_kg, 3, ',', '.') . ' kg';
+    }
+
+    // Métodos
+    public function updateStock($quantity, $type = 'add')
+    {
+        if ($type === 'add') {
+            $this->stock_quantity += $quantity;
+        } else {
+            $this->stock_quantity -= $quantity;
+        }
+        $this->save();
+    }
+
+    public function isLowStock()
+    {
+        return $this->stock_quantity <= $this->min_stock;
+    }
+
+    public function isOverStock()
+    {
+        return $this->stock_quantity >= $this->max_stock;
+    }
+
     public function calculateUnitCost()
     {
-        // Preço de compra (último preço de compra)
-        $purchasePrice = $this->last_purchase_price ?? 0;
-        
-        // Valor dos impostos
-        $taxAmount = $purchasePrice * ($this->tax_percentage / 100);
-        
-        // Custo do frete por unidade (se tiver peso)
-        $freightPerUnit = $this->weight_kg > 0 ? ($this->freight_cost / $this->weight_kg) : 0;
-        
-        // Custo total por unidade
-        return $purchasePrice + $taxAmount + $freightPerUnit;
+        $taxAmount = $this->last_purchase_price * ($this->tax_percentage / 100);
+        return $this->last_purchase_price + $taxAmount + $this->freight_cost;
     }
 
-    // Calcula o preço consumidor baseado no markup
     public function calculateConsumerPrice()
     {
-        $unitCost = $this->unit_cost;
-        if ($unitCost > 0 && $this->consumer_markup > 0) {
-            return $unitCost * (1 + ($this->consumer_markup / 100));
-        }
-        return $this->consumer_price;
+        return $this->unit_cost * (1 + ($this->consumer_markup / 100));
     }
 
-    // Calcula o preço distribuidor baseado no markup
     public function calculateDistributorPrice()
     {
-        $unitCost = $this->unit_cost;
-        if ($unitCost > 0 && $this->distributor_markup > 0) {
-            return $unitCost * (1 + ($this->distributor_markup / 100));
-        }
-        return $this->distributor_price;
-    }
-
-    // Accessors para os preços calculados
-    public function getCalculatedConsumerPriceAttribute()
-    {
-        return $this->calculateConsumerPrice();
-    }
-
-    public function getCalculatedDistributorPriceAttribute()
-    {
-        return $this->calculateDistributorPrice();
-    }
-
-    // Atualiza o custo unitário e todos os preços
-    public function updatePrices()
-    {
-        $this->unit_cost = $this->calculateUnitCost();
-        $this->consumer_price = $this->calculateConsumerPrice();
-        $this->distributor_price = $this->calculateDistributorPrice();
-        return $this->save();
+        return $this->unit_cost * (1 + ($this->distributor_markup / 100));
     }
 }

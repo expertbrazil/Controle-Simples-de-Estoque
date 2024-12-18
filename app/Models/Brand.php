@@ -14,15 +14,15 @@ class Brand extends Model
     protected $fillable = [
         'name',
         'description',
-        'active'
+        'status'
     ];
 
     protected $casts = [
-        'active' => 'boolean'
+        'status' => 'boolean'
     ];
 
     protected $attributes = [
-        'active' => true
+        'status' => true
     ];
 
     public function products()

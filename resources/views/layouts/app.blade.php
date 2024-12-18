@@ -16,6 +16,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
     <link href="{{ asset('css/custom.css') }}" rel="stylesheet">
     @stack('styles')
 
@@ -186,7 +187,7 @@
                             </a>
                         </li>
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle {{ request()->routeIs(['brands.*', 'suppliers.*', 'categories.*', 'products.*', 'customers.*']) ? 'active' : '' }}" href="#" id="navbarDropdownCadastros" role="button" data-bs-toggle="dropdown">
+                            <a class="nav-link dropdown-toggle {{ request()->routeIs(['brands.*', 'suppliers.*', 'categories.*', 'products.*']) ? 'active' : '' }}" href="#" id="navbarDropdownCadastros" role="button" data-bs-toggle="dropdown">
                                 <i class="bi bi-folder"></i> Cadastros
                             </a>
                             <ul class="dropdown-menu">
@@ -201,18 +202,13 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item {{ request()->routeIs('customers.*') ? 'active' : '' }}" href="{{ route('customers.index') }}">
-                                        <i class="bi bi-people"></i> Clientes
-                                    </a>
-                                </li>
-                                <li>
                                     <a class="dropdown-item {{ request()->routeIs('products.*') ? 'active' : '' }}" href="{{ route('products.index') }}">
                                         <i class="bi bi-box"></i> Produtos
                                     </a>
                                 </li>
                                 <li>
                                     <a class="dropdown-item {{ request()->routeIs('suppliers.*') ? 'active' : '' }}" href="{{ route('suppliers.index') }}">
-                                        <i class="bi bi-building"></i> Fornecedores
+                                        <i class="fas fa-truck me-2"></i>Fornecedores
                                     </a>
                                 </li>
                             </ul>

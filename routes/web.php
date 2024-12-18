@@ -53,10 +53,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/products/upload-image', [ProductController::class, 'uploadImage'])->name('products.upload-image');
     Route::get('products/{product}/duplicate', [ProductController::class, 'duplicate'])->name('products.duplicate');
     
-    // Clientes
-    Route::get('/customers/search', [CustomerController::class, 'search'])->name('customers.search');
-    Route::resource('customers', CustomerController::class);
-    
     // PDV
     Route::prefix('pdv')->group(function () {
         Route::get('/', [PdvController::class, 'index'])->name('pdv.index');

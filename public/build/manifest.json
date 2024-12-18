@@ -1,0 +1,24 @@
+{
+  "resources/css/app.css": {
+    "file": "assets/app-3_h5NRLw.css",
+    "src": "resources/css/app.css",
+    "isEntry": true
+  },
+  "resources/js/app.js": {
+    "file": "assets/app-Xaw6OIO1.js",
+    "name": "app",
+    "src": "resources/js/app.js",
+    "isEntry": true
+  },
+  "resources/js/money-mask.js": {
+    "file": "assets/money-mask-BDDhC2tF.js",
+    "name": "money-mask",
+    "src": "resources/js/money-mask.js",
+    "isEntry": true
+  },
+  "resources/sass/app.scss": {
+    "file": "assets/app-BRWUyo1a.css",
+    "src": "resources/sass/app.scss",
+    "isEntry": true
+  }
+}

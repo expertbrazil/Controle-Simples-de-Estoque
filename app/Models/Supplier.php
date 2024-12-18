@@ -16,12 +16,14 @@ class Supplier extends Model
     const PESSOA_JURIDICA = 'J';
 
     protected $fillable = [
-        'nome',
+        'status',
         'tipo_pessoa',
+        'nome',
+        'razao_social',
         'documento',
-        'email',
         'phone',
         'whatsapp',
+        'email',
         'cep',
         'rua',
         'numero',
@@ -29,7 +31,10 @@ class Supplier extends Model
         'bairro',
         'cidade',
         'uf',
-        'status'
+        'flag',
+        'usuario',
+        'senha',
+        'nome_contato'
     ];
 
     protected $casts = [
@@ -44,27 +49,24 @@ class Supplier extends Model
         'tipo_pessoa' => self::PESSOA_JURIDICA
     ];
 
+    protected $dates = ['deleted_at'];
+
     // Formatação do documento (CPF/CNPJ)
     public function getFormattedDocumentoAttribute()
     {
         $doc = preg_replace('/[^0-9]/', '', $this->documento);
         
-        // Se for pessoa física (CPF)
         if ($this->tipo_pessoa === self::PESSOA_FISICA) {
-            if (strlen($doc) !== 11) return $this->documento;
-            return substr($doc, 0, 3) . '.' . 
-                   substr($doc, 3, 3) . '.' . 
-                   substr($doc, 6, 3) . '-' . 
-                   substr($doc, 9, 2);
+            if (strlen($doc) === 11) {
+                return preg_replace('/(\d{3})(\d{3})(\d{3})(\d{2})/', '$1.$2.$3-$4', $doc);
+            }
+        } else {
+            if (strlen($doc) === 14) {
+                return preg_replace('/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/', '$1.$2.$3/$4-$5', $doc);
+            }
         }
         
-        // Se for pessoa jurídica (CNPJ)
-        if (strlen($doc) !== 14) return $this->documento;
-        return substr($doc, 0, 2) . '.' . 
-               substr($doc, 2, 3) . '.' . 
-               substr($doc, 5, 3) . '/' . 
-               substr($doc, 8, 4) . '-' . 
-               substr($doc, 12, 2);
+        return $doc;
     }
 
     // Relacionamentos
@@ -124,7 +126,7 @@ class Supplier extends Model
     }
 
     // Scopes
-    public function scopeActive($query)
+    public function scopeStatus($query)
     {
         return $query->where('status', true);
     }

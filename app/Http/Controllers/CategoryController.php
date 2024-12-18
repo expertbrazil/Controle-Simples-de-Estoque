@@ -37,14 +37,16 @@ class CategoryController extends Controller
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
                 'parent_id' => 'nullable|exists:categories,id',
-                'active' => 'required|boolean'
+                'status' => 'boolean'
             ]);
 
-            $category = Category::create([
+            $data = [
                 'name' => $validated['name'],
                 'parent_id' => $validated['parent_id'] ?? null,
-                'active' => (bool) $validated['active']
-            ]);
+                'status' => $request->has('status')
+            ];
+
+            $category = Category::create($data);
 
             if ($request->wantsJson()) {
                 return response()->json([
@@ -54,7 +56,10 @@ class CategoryController extends Controller
                 ]);
             }
 
-            return redirect()->route('categories.index')->with('success', 'Categoria criada com sucesso!');
+            return redirect()
+                ->route('categories.index')
+                ->with('success', 'Categoria criada com sucesso!');
+
         } catch (\Exception $e) {
             Log::error('Erro ao criar categoria: ' . $e->getMessage());
             
@@ -65,7 +70,10 @@ class CategoryController extends Controller
                 ], 500);
             }
 
-            return back()->with('error', 'Erro ao criar categoria. Por favor, tente novamente.');
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Erro ao criar categoria. Por favor, tente novamente.');
         }
     }
 

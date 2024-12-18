@@ -8,7 +8,7 @@
         {{ $category->name }}
     </td>
     <td>
-        @if($category->active)
+        @if($category->status)
             <span class="badge bg-success">Ativa</span>
         @else
             <span class="badge bg-danger">Inativa</span>

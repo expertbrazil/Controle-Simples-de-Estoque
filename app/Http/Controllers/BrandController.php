@@ -24,11 +24,14 @@ class BrandController extends Controller
         $request->validate([
             'name' => 'required|max:255',
             'description' => 'nullable|max:1000',
-            'active' => 'boolean'
+            'status' => 'boolean'
         ]);
 
         try {
-            Brand::create($request->all());
+            $data = $request->all();
+            $data['status'] = $request->has('status');
+            
+            Brand::create($data);
             return redirect()->route('brands.index')->with('success', 'Marca cadastrada com sucesso!');
         } catch (\Exception $e) {
             Log::error('Erro ao cadastrar marca: ' . $e->getMessage());
@@ -46,11 +49,14 @@ class BrandController extends Controller
         $request->validate([
             'name' => 'required|max:255',
             'description' => 'nullable|max:1000',
-            'active' => 'boolean'
+            'status' => 'boolean'
         ]);
 
         try {
-            $brand->update($request->all());
+            $data = $request->all();
+            $data['status'] = $request->has('status');
+            
+            $brand->update($data);
             return redirect()->route('brands.index')->with('success', 'Marca atualizada com sucesso!');
         } catch (\Exception $e) {
             Log::error('Erro ao atualizar marca: ' . $e->getMessage());

@@ -23,36 +23,60 @@
                 @method('PUT')
                 
                 <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label for="nome" class="form-label">Nome <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control @error('nome') is-invalid @enderror" id="nome" name="nome" value="{{ old('nome', $supplier->nome) }}" required>
-                        @error('nome')
+
+                    <div class="col-md-2 mb-3">
+                        <label for="status" class="form-label">Status</label>
+                        <select class="form-select @error('status') is-invalid @enderror" id="status" name="status">
+                            <option value="1" {{ old('status', $supplier->status) ? 'selected' : '' }}>Ativo</option>
+                            <option value="0" {{ !old('status', $supplier->status) ? 'selected' : '' }}>Inativo</option>
+                        </select>
+                        @error('status')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
+                
 
-                    <div class="col-md-2 mb-3">
-                        <label for="tipo_pessoa" class="form-label">Tipo Pessoa <span class="text-danger">*</span></label>
-                        <select class="form-select @error('tipo_pessoa') is-invalid @enderror" id="tipo_pessoa" name="tipo_pessoa" required>
-                            <option value="J" {{ old('tipo_pessoa', $supplier->tipo_pessoa) == 'J' ? 'selected' : '' }}>Jurídica</option>
-                            <option value="F" {{ old('tipo_pessoa', $supplier->tipo_pessoa) == 'F' ? 'selected' : '' }}>Física</option>
+                    <div class="col-12 col-md-4 mb-3">
+                        <label for="tipo_pessoa" class="form-label">Tipo de Pessoa</label>
+                        <select class="form-select @error('tipo_pessoa') is-invalid @enderror" id="tipo_pessoa" name="tipo_pessoa">
+                            <option value="F" {{ old('tipo_pessoa', $supplier->tipo_pessoa) == 'F' ? 'selected' : '' }}>Pessoa Física</option>
+                            <option value="J" {{ old('tipo_pessoa', $supplier->tipo_pessoa) == 'J' ? 'selected' : '' }}>Pessoa Jurídica</option>
                         </select>
                         @error('tipo_pessoa')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
 
-                    <div class="col-md-4 mb-3">
-                        <label for="documento" class="form-label">CPF/CNPJ <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control @error('documento') is-invalid @enderror" id="documento" name="documento" value="{{ old('documento', $supplier->documento) }}" required>
-                        @error('documento')
+                    
+                </div>
+
+                <div class="row">
+                    <div class="col-12 col-md-6 mb-3 pessoa-fisica">
+                        <label for="nome" class="form-label">Nome</label>
+                        <input type="text" class="form-control @error('nome') is-invalid @enderror" id="nome" name="nome" value="{{ old('nome', $supplier->nome) }}">
+                        @error('nome')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="col-12 col-md-6 mb-3 pessoa-juridica">
+                        <label for="razao_social" class="form-label">Razão Social</label>
+                        <input type="text" class="form-control @error('razao_social') is-invalid @enderror" id="razao_social" name="razao_social" value="{{ old('razao_social', $supplier->razao_social) }}">
+                        @error('razao_social')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
                 </div>
 
                 <div class="row">
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-3 mb-3">
+                        <label for="documento" class="form-label">CPF/CNPJ</label>
+                        <input type="text" class="form-control @error('documento') is-invalid @enderror" id="documento" name="documento" value="{{ old('documento', $supplier->documento) }}">
+                        @error('documento')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="col-md-3 mb-3">
                         <label for="email" class="form-label">E-mail</label>
                         <input type="email" class="form-control @error('email') is-invalid @enderror" id="email" name="email" value="{{ old('email', $supplier->email) }}">
                         @error('email')
@@ -60,24 +84,25 @@
                         @enderror
                     </div>
 
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-3 mb-3">
                         <label for="phone" class="form-label">Telefone</label>
                         <input type="text" class="form-control @error('phone') is-invalid @enderror" id="phone" name="phone" value="{{ old('phone', $supplier->phone) }}">
                         @error('phone')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
-                </div>
 
-                <div class="row">
-                    <div class="col-md-4 mb-3">
-                        <label for="cep" class="form-label">CEP</label>
-                        <input type="text" class="form-control @error('cep') is-invalid @enderror" id="cep" name="cep" value="{{ old('cep', $supplier->cep) }}">
-                        @error('cep')
+                    <div class="col-md-3 mb-3">
+                        <label for="whatsapp" class="form-label">WhatsApp</label>
+                        <input type="text" class="form-control @error('whatsapp') is-invalid @enderror" id="whatsapp" name="whatsapp" value="{{ old('whatsapp', $supplier->whatsapp) }}">
+                        @error('whatsapp')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
+                </div>
 
+
+                <div class="row">
                     <div class="col-md-6 mb-3">
                         <label for="rua" class="form-label">Rua</label>
                         <input type="text" class="form-control @error('rua') is-invalid @enderror" id="rua" name="rua" value="{{ old('rua', $supplier->rua) }}">
@@ -93,13 +118,22 @@
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
-                </div>
 
-                <div class="row">
-                    <div class="col-md-4 mb-3">
+                    <div class="col-md-2 mb-3">
                         <label for="complemento" class="form-label">Complemento</label>
                         <input type="text" class="form-control @error('complemento') is-invalid @enderror" id="complemento" name="complemento" value="{{ old('complemento', $supplier->complemento) }}">
                         @error('complemento')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    
+                </div>
+
+                <div class="row">
+                    <div class="col-md-2 mb-3">
+                        <label for="cep" class="form-label">CEP</label>
+                        <input type="text" class="form-control @error('cep') is-invalid @enderror" id="cep" name="cep" value="{{ old('cep', $supplier->cep) }}">
+                        @error('cep')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
@@ -112,68 +146,61 @@
                         @enderror
                     </div>
 
-                    <div class="col-md-4 mb-3">
+                    <div class="col-md-3 mb-3">
                         <label for="cidade" class="form-label">Cidade</label>
                         <input type="text" class="form-control @error('cidade') is-invalid @enderror" id="cidade" name="cidade" value="{{ old('cidade', $supplier->cidade) }}">
                         @error('cidade')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
-                </div>
 
-                <div class="row">
-                    <div class="col-md-4 mb-3">
-                        <label for="uf" class="form-label">Estado</label>
-                        <select class="form-select @error('uf') is-invalid @enderror" id="uf" name="uf">
-                            <option value="">Selecione o estado</option>
-                            <option value="AC" {{ old('uf', $supplier->uf) == 'AC' ? 'selected' : '' }}>Acre</option>
-                            <option value="AL" {{ old('uf', $supplier->uf) == 'AL' ? 'selected' : '' }}>Alagoas</option>
-                            <option value="AP" {{ old('uf', $supplier->uf) == 'AP' ? 'selected' : '' }}>Amapá</option>
-                            <option value="AM" {{ old('uf', $supplier->uf) == 'AM' ? 'selected' : '' }}>Amazonas</option>
-                            <option value="BA" {{ old('uf', $supplier->uf) == 'BA' ? 'selected' : '' }}>Bahia</option>
-                            <option value="CE" {{ old('uf', $supplier->uf) == 'CE' ? 'selected' : '' }}>Ceará</option>
-                            <option value="DF" {{ old('uf', $supplier->uf) == 'DF' ? 'selected' : '' }}>Distrito Federal</option>
-                            <option value="ES" {{ old('uf', $supplier->uf) == 'ES' ? 'selected' : '' }}>Espírito Santo</option>
-                            <option value="GO" {{ old('uf', $supplier->uf) == 'GO' ? 'selected' : '' }}>Goiás</option>
-                            <option value="MA" {{ old('uf', $supplier->uf) == 'MA' ? 'selected' : '' }}>Maranhão</option>
-                            <option value="MT" {{ old('uf', $supplier->uf) == 'MT' ? 'selected' : '' }}>Mato Grosso</option>
-                            <option value="MS" {{ old('uf', $supplier->uf) == 'MS' ? 'selected' : '' }}>Mato Grosso do Sul</option>
-                            <option value="MG" {{ old('uf', $supplier->uf) == 'MG' ? 'selected' : '' }}>Minas Gerais</option>
-                            <option value="PA" {{ old('uf', $supplier->uf) == 'PA' ? 'selected' : '' }}>Pará</option>
-                            <option value="PB" {{ old('uf', $supplier->uf) == 'PB' ? 'selected' : '' }}>Paraíba</option>
-                            <option value="PR" {{ old('uf', $supplier->uf) == 'PR' ? 'selected' : '' }}>Paraná</option>
-                            <option value="PE" {{ old('uf', $supplier->uf) == 'PE' ? 'selected' : '' }}>Pernambuco</option>
-                            <option value="PI" {{ old('uf', $supplier->uf) == 'PI' ? 'selected' : '' }}>Piauí</option>
-                            <option value="RJ" {{ old('uf', $supplier->uf) == 'RJ' ? 'selected' : '' }}>Rio de Janeiro</option>
-                            <option value="RN" {{ old('uf', $supplier->uf) == 'RN' ? 'selected' : '' }}>Rio Grande do Norte</option>
-                            <option value="RS" {{ old('uf', $supplier->uf) == 'RS' ? 'selected' : '' }}>Rio Grande do Sul</option>
-                            <option value="RO" {{ old('uf', $supplier->uf) == 'RO' ? 'selected' : '' }}>Rondônia</option>
-                            <option value="RR" {{ old('uf', $supplier->uf) == 'RR' ? 'selected' : '' }}>Roraima</option>
-                            <option value="SC" {{ old('uf', $supplier->uf) == 'SC' ? 'selected' : '' }}>Santa Catarina</option>
-                            <option value="SP" {{ old('uf', $supplier->uf) == 'SP' ? 'selected' : '' }}>São Paulo</option>
-                            <option value="SE" {{ old('uf', $supplier->uf) == 'SE' ? 'selected' : '' }}>Sergipe</option>
-                            <option value="TO" {{ old('uf', $supplier->uf) == 'TO' ? 'selected' : '' }}>Tocantins</option>
-                        </select>
+                    <div class="col-md-3 mb-3">
+                        <label for="uf" class="form-label">UF</label>
+                        <input type="text" class="form-control @error('uf') is-invalid @enderror" id="uf" name="uf" value="{{ old('uf', $supplier->uf) }}" maxlength="2">
                         @error('uf')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
                 </div>
 
-                <div class="mb-3">
-                    <label for="contact_name" class="form-label">Nome do Contato</label>
-                    <input type="text" class="form-control @error('contact_name') is-invalid @enderror" id="contact_name" name="contact_name" value="{{ old('contact_name', $supplier->contact_name) }}">
-                    @error('contact_name')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
-                </div>
-
-                <div class="mb-3">
-                    <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" id="active" name="active" value="1" {{ old('active', $supplier->active) ? 'checked' : '' }}>
-                        <label class="form-check-label" for="active">Ativo</label>
+                <div class="row">
+                    <div class="col-12 mb-3">
+                        <label class="form-label d-block">Flag</label>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input @error('flag') is-invalid @enderror" type="checkbox" name="flag[]" id="flag_cliente" value="cliente" {{ (is_array(old('flag', json_decode($supplier->flag))) && in_array('cliente', old('flag', json_decode($supplier->flag)))) ? 'checked' : '' }}>
+                            <label class="form-check-label" for="flag_cliente">Cliente</label>
+                        </div>
+                        <div class="form-check form-check-inline flag-fornecedor">
+                            <input class="form-check-input @error('flag') is-invalid @enderror" type="checkbox" name="flag[]" id="flag_fornecedor" value="fornecedor" {{ (is_array(old('flag', json_decode($supplier->flag))) && in_array('fornecedor', old('flag', json_decode($supplier->flag)))) ? 'checked' : '' }}>
+                            <label class="form-check-label" for="flag_fornecedor">Fornecedor</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input @error('flag') is-invalid @enderror" type="checkbox" name="flag[]" id="flag_revendedor" value="revendedor" {{ (is_array(old('flag', json_decode($supplier->flag))) && in_array('revendedor', old('flag', json_decode($supplier->flag)))) ? 'checked' : '' }}>
+                            <label class="form-check-label" for="flag_revendedor">Revendedor</label>
+                        </div>
+                        @error('flag')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
                     </div>
                 </div>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3 user-credentials" style="display: none;">
+                        <label for="usuario" class="form-label">Usuário</label>
+                        <input type="text" class="form-control" id="usuario" value="{{ $supplier->usuario }}" readonly disabled>
+                    </div>
+
+                    <div class="col-md-4 mb-3 user-credentials" style="display: none;">
+                        <label for="senha" class="form-label">Senha</label>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="senha" value="{{ $supplier->senha }}" readonly disabled>
+                            <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
 
                 <div class="d-flex justify-content-end gap-2">
                     <a href="{{ route('suppliers.index') }}" class="btn btn-secondary">Cancelar</a>
@@ -185,73 +212,144 @@
 </div>
 
 @push('scripts')
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
 <script>
     $(document).ready(function() {
-        // Máscaras dos campos
-        $('#documento').mask('00.000.000/0000-00');
-        $('#phone').mask('(00) 00000-0000');
-        $('#cep').mask('00000-000');
+        // Função para atualizar a máscara do documento
+        function updateDocumentoMask() {
+            var tipoPessoa = $('#tipo_pessoa').val();
+            var $documento = $('#documento');
+            
+            // Remove máscaras anteriores
+            $documento.unmask();
+            
+            // Aplica a máscara adequada
+            if (tipoPessoa === 'F') {
+                $documento.mask('000.000.000-00');
+                $documento.attr('placeholder', '000.000.000-00');
+                // Mostra campos de pessoa física e esconde de pessoa jurídica
+                $('.pessoa-fisica').show();
+                $('.pessoa-juridica').hide();
+                // Limpa o campo de razão social
+                $('#razao_social').val('');
+            } else {
+                $documento.mask('00.000.000/0000-00');
+                $documento.attr('placeholder', '00.000.000/0000-00');
+                // Mostra campos de pessoa jurídica e esconde de pessoa física
+                $('.pessoa-juridica').show();
+                $('.pessoa-fisica').hide();
+                // Limpa o campo de nome
+                $('#nome').val('');
+            }
+        }
 
         // Atualiza a máscara quando o tipo de pessoa muda
-        $('#tipo_pessoa').change(function() {
-            var tipo = $(this).val();
-            var doc = $('#documento');
-            doc.val(''); // Limpa o campo
-            if (tipo === 'F') {
-                doc.mask('000.000.000-00');
-            } else {
-                doc.mask('00.000.000/0000-00');
-            }
-        });
-
-        // Define a máscara inicial baseada no tipo de pessoa
-        var tipoPessoa = $('#tipo_pessoa').val();
-        if (tipoPessoa === 'F') {
-            $('#documento').mask('000.000.000-00');
-        } else {
-            $('#documento').mask('00.000.000/0000-00');
-        }
-
-        // Busca CEP
-        $('#cep').blur(function() {
-            var cep = $(this).val().replace(/\D/g, '');
+        $('#tipo_pessoa').on('change', function() {
+            var tipoPessoa = $(this).val();
+            var oldTipoPessoa = $(this).data('old-value');
             
-            if (cep != "") {
-                var validacep = /^[0-9]{8}$/;
+            // Se está mudando de tipo de pessoa e já tem dados preenchidos
+            if (oldTipoPessoa && oldTipoPessoa !== tipoPessoa) {
+                var temDados = (tipoPessoa === 'F' && $('#razao_social').val()) || 
+                              (tipoPessoa === 'J' && $('#nome').val());
                 
-                if(validacep.test(cep)) {
-                    $('#rua').val('...');
-                    $('#bairro').val('...');
-                    $('#cidade').val('...');
-                    $('#uf').val('...');
-
-                    $.getJSON("https://viacep.com.br/ws/"+ cep +"/json/?callback=?", function(dados) {
-                        if (!("erro" in dados)) {
-                            $('#rua').val(dados.logradouro);
-                            $('#bairro').val(dados.bairro);
-                            $('#cidade').val(dados.localidade);
-                            $('#uf').val(dados.uf);
-                        } else {
-                            limpa_formulario_cep();
-                            alert("CEP não encontrado.");
-                        }
-                    });
-                } else {
-                    limpa_formulario_cep();
-                    alert("Formato de CEP inválido.");
+                if (temDados) {
+                    if (!confirm('Ao mudar o tipo de pessoa, os dados do nome/razão social serão perdidos. Deseja continuar?')) {
+                        $(this).val(oldTipoPessoa);
+                        return;
+                    }
                 }
+            }
+            
+            // Armazena o valor atual para a próxima verificação
+            $(this).data('old-value', tipoPessoa);
+            
+            updateDocumentoMask();
+        });
+        
+        // Aplica a máscara inicial e armazena o valor inicial
+        $('#tipo_pessoa').data('old-value', $('#tipo_pessoa').val());
+        updateDocumentoMask();
+
+        // Máscara para telefone
+        $('#phone').mask('(00) 0000-0000');
+        
+        // Máscara para WhatsApp
+        $('#whatsapp').mask('(00) 00000-0000');
+        
+        // Máscara para CEP
+        $('#cep').mask('00000-000');
+
+        // Toggle senha
+        $('#togglePassword').on('click', function() {
+            var senha = $('#senha');
+            if (senha.attr('type') === 'password') {
+                senha.attr('type', 'text');
+                $(this).find('i').removeClass('fa-eye').addClass('fa-eye-slash');
             } else {
-                limpa_formulario_cep();
+                senha.attr('type', 'password');
+                $(this).find('i').removeClass('fa-eye-slash').addClass('fa-eye');
             }
         });
 
-        function limpa_formulario_cep() {
-            $('#rua').val('');
-            $('#bairro').val('');
-            $('#cidade').val('');
-            $('#uf').val('');
+        // Função para controlar a visibilidade dos campos de usuário e senha e opção fornecedor
+        function updateVisibility() {
+            var showCredentials = false;
+            var hideSupplier = false;
+            
+            $('input[name="flag[]"]:checked').each(function() {
+                var value = $(this).val();
+                if (value === 'cliente' || value === 'revendedor') {
+                    showCredentials = true;
+                    hideSupplier = true;
+                    // Desmarca fornecedor se estiver marcado
+                    $('#flag_fornecedor').prop('checked', false);
+                }
+            });
+
+            // Controla visibilidade dos campos de credenciais
+            if (showCredentials) {
+                $('.user-credentials').slideDown();
+                $('.flag-fornecedor').hide(); // Esconde opção fornecedor
+            } else {
+                $('.user-credentials').slideUp();
+                $('.flag-fornecedor').show(); // Mostra opção fornecedor
+            }
         }
+
+        // Atualiza visibilidade quando as flags mudam
+        $('input[name="flag[]"]').on('change', function(e) {
+            var $checkbox = $(this);
+            var isClienteOrRevendedor = $checkbox.val() === 'cliente' || $checkbox.val() === 'revendedor';
+            var isFornecedor = $checkbox.val() === 'fornecedor';
+            var wasChecked = !$checkbox.is(':checked'); // Estado anterior do checkbox
+            
+            if (isClienteOrRevendedor && !$checkbox.is(':checked')) {
+                // Se está desmarcando cliente ou revendedor
+                if ($('.user-credentials').is(':visible')) {
+                    e.preventDefault(); // Previne a mudança do checkbox
+                    if (confirm('Ao remover as flags de cliente e revendedor, os dados de acesso serão apagados. Deseja continuar?')) {
+                        $checkbox.prop('checked', false);
+                        updateVisibility();
+                    } else {
+                        $checkbox.prop('checked', true);
+                    }
+                }
+            } else if (isClienteOrRevendedor && $checkbox.is(':checked')) {
+                // Se marcou cliente ou revendedor, desmarca fornecedor
+                $('#flag_fornecedor').prop('checked', false);
+                updateVisibility();
+            } else if (isFornecedor && $checkbox.is(':checked')) {
+                // Se marcou fornecedor, desmarca cliente e revendedor
+                $('#flag_cliente, #flag_revendedor').prop('checked', false);
+                updateVisibility();
+            } else {
+                updateVisibility();
+            }
+        });
+
+        // Executa na carga inicial da página
+        updateVisibility();
     });
 </script>
 @endpush
-@endsection

@@ -34,7 +34,7 @@
                             <td>{{ $brand->name }}</td>
                             <td>{{ $brand->description }}</td>
                             <td>
-                                @if($brand->active)
+                                @if($brand->status)
                                     <span class="badge bg-success">Ativo</span>
                                 @else
                                     <span class="badge bg-danger">Inativo</span>
