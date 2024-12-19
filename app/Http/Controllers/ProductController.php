@@ -268,6 +268,39 @@ class ProductController extends BaseController
         }
     }
 
+    public function destroy(Product $product)
+    {
+        try {
+            DB::beginTransaction();
+
+            // Exclui o histórico de preços
+            PriceHistory::where('product_id', $product->id)->delete();
+
+            // Remove a imagem se existir
+            if ($product->image) {
+                Storage::disk('public')->delete('produtos/' . $product->image);
+            }
+
+            // Força a exclusão permanente do produto
+            $product->forceDelete();
+
+            DB::commit();
+
+            return redirect()
+                ->route('products.index')
+                ->with('success', 'Produto excluído com sucesso!');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Erro ao excluir produto: ' . $e->getMessage());
+            \Log::error($e->getTraceAsString());
+
+            return redirect()
+                ->back()
+                ->with('error', 'Erro ao excluir produto: ' . $e->getMessage());
+        }
+    }
+
     /**
      * Remove formatação dos campos monetários e percentuais
      */
