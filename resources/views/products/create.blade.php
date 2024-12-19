@@ -110,12 +110,15 @@
                         <div class="row">
                             <div class="col-md-4 mb-3">
                                 <label for="last_purchase_price" class="form-label">Último Preço de Compra <span class="text-danger">*</span></label>
-                                <input type="text" 
-                                       class="form-control @error('last_purchase_price') is-invalid @enderror" 
-                                       id="last_purchase_price" 
-                                       name="last_purchase_price" 
-                                       value="{{ old('last_purchase_price') }}" 
-                                       required>
+                                <div class="input-group">
+                                    <span class="input-group-text">R$</span>
+                                    <input type="text" 
+                                           class="form-control money @error('last_purchase_price') is-invalid @enderror" 
+                                           id="last_purchase_price" 
+                                           name="last_purchase_price" 
+                                           value="{{ old('last_purchase_price') }}" 
+                                           required>
+                                </div>
                                 @error('last_purchase_price')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -123,12 +126,15 @@
 
                             <div class="col-md-4 mb-3">
                                 <label for="tax_percentage" class="form-label">Percentual de Imposto <span class="text-danger">*</span></label>
-                                <input type="text" 
-                                       class="form-control @error('tax_percentage') is-invalid @enderror" 
-                                       id="tax_percentage" 
-                                       name="tax_percentage" 
-                                       value="{{ old('tax_percentage') }}" 
-                                       required>
+                                <div class="input-group">
+                                    <input type="text" 
+                                           class="form-control percentage @error('tax_percentage') is-invalid @enderror" 
+                                           id="tax_percentage" 
+                                           name="tax_percentage" 
+                                           value="{{ old('tax_percentage') }}" 
+                                           required>
+                                    <span class="input-group-text">%</span>
+                                </div>
                                 @error('tax_percentage')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -136,12 +142,15 @@
 
                             <div class="col-md-4 mb-3">
                                 <label for="freight_cost" class="form-label">Custo de Frete <span class="text-danger">*</span></label>
-                                <input type="text" 
-                                       class="form-control @error('freight_cost') is-invalid @enderror" 
-                                       id="freight_cost" 
-                                       name="freight_cost" 
-                                       value="{{ old('freight_cost') }}" 
-                                       required>
+                                <div class="input-group">
+                                    <span class="input-group-text">R$</span>
+                                    <input type="text" 
+                                           class="form-control money @error('freight_cost') is-invalid @enderror" 
+                                           id="freight_cost" 
+                                           name="freight_cost" 
+                                           value="{{ old('freight_cost') }}" 
+                                           required>
+                                </div>
                                 @error('freight_cost')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -151,38 +160,47 @@
                         <div class="row">
                             <div class="col-md-4 mb-3">
                                 <label for="weight_kg" class="form-label">Peso (kg) <span class="text-danger">*</span></label>
-                                <input type="text" 
-                                       class="form-control @error('weight_kg') is-invalid @enderror" 
-                                       id="weight_kg" 
-                                       name="weight_kg" 
-                                       value="{{ old('weight_kg') }}" 
-                                       required>
+                                <div class="input-group">
+                                    <input type="text" 
+                                           class="form-control decimal @error('weight_kg') is-invalid @enderror" 
+                                           id="weight_kg" 
+                                           name="weight_kg" 
+                                           value="{{ old('weight_kg') }}" 
+                                           required>
+                                    <span class="input-group-text">kg</span>
+                                </div>
                                 @error('weight_kg')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
 
                             <div class="col-md-4 mb-3">
-                                <label for="consumer_markup" class="form-label">Markup Consumidor <span class="text-danger">*</span></label>
-                                <input type="text" 
-                                       class="form-control @error('consumer_markup') is-invalid @enderror" 
-                                       id="consumer_markup" 
-                                       name="consumer_markup" 
-                                       value="{{ old('consumer_markup') }}" 
-                                       required>
+                                <label for="consumer_markup" class="form-label">Margem Consumidor <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="text" 
+                                           class="form-control percentage @error('consumer_markup') is-invalid @enderror" 
+                                           id="consumer_markup" 
+                                           name="consumer_markup" 
+                                           value="{{ old('consumer_markup') }}" 
+                                           required>
+                                    <span class="input-group-text">%</span>
+                                </div>
                                 @error('consumer_markup')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
 
                             <div class="col-md-4 mb-3">
-                                <label for="distributor_markup" class="form-label">Markup Distribuidor <span class="text-danger">*</span></label>
-                                <input type="text" 
-                                       class="form-control @error('distributor_markup') is-invalid @enderror" 
-                                       id="distributor_markup" 
-                                       name="distributor_markup" 
-                                       value="{{ old('distributor_markup') }}" 
-                                       required>
+                                <label for="distributor_markup" class="form-label">Margem Distribuidor <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="text" 
+                                           class="form-control percentage @error('distributor_markup') is-invalid @enderror" 
+                                           id="distributor_markup" 
+                                           name="distributor_markup" 
+                                           value="{{ old('distributor_markup') }}" 
+                                           required>
+                                    <span class="input-group-text">%</span>
+                                </div>
                                 @error('distributor_markup')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -191,37 +209,125 @@
 
                         <div class="row">
                             <div class="col-md-4 mb-3">
-                                <label for="consumer_price" class="form-label">Preço Consumidor <span class="text-danger">*</span></label>
-                                <input type="text" 
-                                       class="form-control @error('consumer_price') is-invalid @enderror" 
-                                       id="consumer_price" 
-                                       name="consumer_price" 
-                                       value="{{ old('consumer_price') }}" 
+                                <label for="unit_cost" class="form-label">Custo Unitário</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">R$</span>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="unit_cost" 
+                                           readonly>
+                                    <input type="hidden" 
+                                           name="unit_cost" 
+                                           value="{{ old('unit_cost', 0) }}">
+                                </div>
+                                <small class="text-muted">Calculado automaticamente</small>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label for="consumer_price" class="form-label">Preço Consumidor</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">R$</span>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="consumer_price" 
+                                           readonly>
+                                    <input type="hidden" 
+                                           name="consumer_price" 
+                                           value="{{ old('consumer_price', 0) }}">
+                                </div>
+                                <small class="text-muted">Calculado automaticamente</small>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label for="distributor_price" class="form-label">Preço Distribuidor</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">R$</span>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="distributor_price" 
+                                           readonly>
+                                    <input type="hidden" 
+                                           name="distributor_price" 
+                                           value="{{ old('distributor_price', 0) }}">
+                                </div>
+                                <small class="text-muted">Calculado automaticamente</small>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="min_stock" class="form-label">Estoque Mínimo <span class="text-danger">*</span></label>
+                                <input type="number" 
+                                       class="form-control @error('min_stock') is-invalid @enderror" 
+                                       id="min_stock" 
+                                       name="min_stock" 
+                                       value="{{ old('min_stock') }}" 
                                        required>
-                                @error('consumer_price')
+                                @error('min_stock')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
 
                             <div class="col-md-4 mb-3">
-                                <label for="distributor_price" class="form-label">Preço Distribuidor <span class="text-danger">*</span></label>
-                                <input type="text" 
-                                       class="form-control @error('distributor_price') is-invalid @enderror" 
-                                       id="distributor_price" 
-                                       name="distributor_price" 
-                                       value="{{ old('distributor_price') }}" 
+                                <label for="max_stock" class="form-label">Estoque Máximo <span class="text-danger">*</span></label>
+                                <input type="number" 
+                                       class="form-control @error('max_stock') is-invalid @enderror" 
+                                       id="max_stock" 
+                                       name="max_stock" 
+                                       value="{{ old('max_stock') }}" 
                                        required>
-                                @error('distributor_price')
+                                @error('max_stock')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
 
                             <div class="col-md-4 mb-3">
+                                <label for="stock_quantity" class="form-label">Quantidade em Estoque <span class="text-danger">*</span></label>
+                                <input type="number" 
+                                       class="form-control @error('stock_quantity') is-invalid @enderror" 
+                                       id="stock_quantity" 
+                                       name="stock_quantity" 
+                                       value="{{ old('stock_quantity', 0) }}" 
+                                       required>
+                                @error('stock_quantity')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12 mb-3">
+                                <label for="description" class="form-label">Descrição</label>
+                                <textarea class="form-control @error('description') is-invalid @enderror" 
+                                          id="description" 
+                                          name="description" 
+                                          rows="3">{{ old('description') }}</textarea>
+                                @error('description')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="barcode" class="form-label">Código de Barras</label>
+                                <input type="text" 
+                                       class="form-control @error('barcode') is-invalid @enderror" 
+                                       id="barcode" 
+                                       name="barcode" 
+                                       value="{{ old('barcode') }}">
+                                @error('barcode')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-6 mb-3">
                                 <label for="image" class="form-label">Imagem do Produto</label>
                                 <input type="file" 
                                        class="form-control @error('image') is-invalid @enderror" 
                                        id="image" 
-                                       name="image">
+                                       name="image" 
+                                       accept="image/*">
                                 @error('image')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -229,24 +335,39 @@
                         </div>
 
                         <div class="row">
-                            <div class="col-12">
-                                <div class="form-group">
-                                    <label for="description" class="form-label">Descrição</label>
-                                    <textarea class="form-control @error('description') is-invalid @enderror" 
-                                              id="description" 
-                                              name="description" 
-                                              rows="3">{{ old('description') }}</textarea>
-                                    @error('description')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Status do Produto</label>
+                                <div class="d-flex gap-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" 
+                                               type="radio" 
+                                               name="status" 
+                                               id="status_yes" 
+                                               value="1"
+                                               {{ old('status', true) ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="status_yes">Ativo</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" 
+                                               type="radio" 
+                                               name="status" 
+                                               id="status_no" 
+                                               value="0"
+                                               {{ old('status', true) ? '' : 'checked' }}>
+                                        <label class="form-check-label" for="status_no">Inativo</label>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="row">
-                            <div class="col-12 text-end">
-                                <button type="submit" class="btn btn-primary">Salvar</button>
-                                <a href="{{ route('products.index') }}" class="btn btn-secondary">Cancelar</a>
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-save"></i> Salvar
+                                </button>
+                                <a href="{{ route('products.index') }}" class="btn btn-secondary">
+                                    <i class="bi bi-x-circle"></i> Cancelar
+                                </a>
                             </div>
                         </div>
                     </form>
@@ -256,625 +377,99 @@
     </div>
 </div>
 
-@push('modals')
-<!-- Modal Categoria -->
-<div class="modal fade" id="categoryModal" tabindex="-1" aria-labelledby="categoryModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="categoryModalLabel">Nova Categoria</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form id="quickCategoryForm" action="{{ route('categories.store') }}" method="POST">
-                @csrf
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="category_name" class="form-label">Nome da Categoria <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="category_name" name="name" required>
-                    </div>
-                    <div class="mb-3">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="category_status" name="status" value="1" checked>
-                            <label class="form-check-label" for="category_status">
-                                Ativo
-                            </label>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Salvar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Marca -->
-<div class="modal fade" id="brandModal" tabindex="-1" aria-labelledby="brandModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="brandModalLabel">Nova Marca</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form id="quickBrandForm" action="{{ route('brands.store') }}" method="POST">
-                @csrf
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="brand_name" class="form-label">Nome da Marca <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="brand_name" name="name" required>
-                    </div>
-                    <div class="mb-3">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="brand_status" name="status" value="1" checked>
-                            <label class="form-check-label" for="brand_status">
-                                Ativo
-                            </label>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Salvar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Fornecedor -->
-<div class="modal fade" id="modalFornecedor" tabindex="-1" data-bs-backdrop="static">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable modal-end">
-        <div class="modal-content min-vh-100">
-            <div class="modal-header">
-                <h5 class="modal-title">Novo Fornecedor</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="formFornecedor" action="{{ route('suppliers.store') }}" method="POST">
-                    @csrf
-                    
-                    <div class="row">
-                        <div class="col-md-2 mb-3">
-                            <label for="status" class="form-label">Status</label>
-                            <select class="form-select @error('status') is-invalid @enderror" id="status" name="status">
-                                <option value="1" {{ old('status') == '1' ? 'selected' : '' }}>Ativo</option>
-                                <option value="0" {{ old('status') == '0' ? 'selected' : '' }}>Inativo</option>
-                            </select>
-                            @error('status')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <div class="col-md-2 mb-3">
-                            <label for="tipo_pessoa" class="form-label">Tipo de Pessoa</label>
-                            <select class="form-select @error('tipo_pessoa') is-invalid @enderror" id="tipo_pessoa" name="tipo_pessoa">
-                                <option value="F" {{ old('tipo_pessoa') == 'F' ? 'selected' : '' }}>Pessoa Física</option>
-                                <option value="J" {{ old('tipo_pessoa') == 'J' ? 'selected' : '' }}>Pessoa Jurídica</option>
-                            </select>
-                            @error('tipo_pessoa')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <div class="col-md-4 mb-3">
-                            <label for="nome" class="form-label">Nome</label>
-                            <input type="text" class="form-control @error('nome') is-invalid @enderror" id="nome" name="nome" value="{{ old('nome') }}">
-                            @error('nome')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <div class="col-md-4 mb-3">
-                            <label for="razao_social" class="form-label">Razão Social</label>
-                            <input type="text" class="form-control @error('razao_social') is-invalid @enderror" id="razao_social" name="razao_social" value="{{ old('razao_social') }}">
-                            @error('razao_social')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-3 mb-3">
-                            <label for="documento" class="form-label">CPF/CNPJ</label>
-                            <input type="text" class="form-control @error('documento') is-invalid @enderror" id="documento" name="documento" value="{{ old('documento') }}">
-                            @error('documento')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <div class="col-md-3 mb-3">
-                            <label for="phone" class="form-label">Telefone</label>
-                            <input type="text" class="form-control @error('phone') is-invalid @enderror" id="phone" name="phone" value="{{ old('phone') }}">
-                            @error('phone')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <div class="col-md-3 mb-3">
-                            <label for="whatsapp" class="form-label">WhatsApp</label>
-                            <input type="text" class="form-control @error('whatsapp') is-invalid @enderror" id="whatsapp" name="whatsapp" value="{{ old('whatsapp') }}">
-                            @error('whatsapp')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <div class="col-md-3 mb-3">
-                            <label for="email" class="form-label">E-mail</label>
-                            <input type="email" class="form-control @error('email') is-invalid @enderror" id="email" name="email" value="{{ old('email') }}">
-                            @error('email')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-2 mb-3">
-                            <label for="cep" class="form-label">CEP</label>
-                            <input type="text" class="form-control @error('cep') is-invalid @enderror" id="cep" name="cep" value="{{ old('cep') }}">
-                            @error('cep')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <div class="col-md-4 mb-3">
-                            <label for="rua" class="form-label">Rua</label>
-                            <input type="text" class="form-control @error('rua') is-invalid @enderror" id="rua" name="rua" value="{{ old('rua') }}">
-                            @error('rua')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <div class="col-md-2 mb-3">
-                            <label for="numero" class="form-label">Número</label>
-                            <input type="text" class="form-control @error('numero') is-invalid @enderror" id="numero" name="numero" value="{{ old('numero') }}">
-                            @error('numero')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <div class="col-md-4 mb-3">
-                            <label for="complemento" class="form-label">Complemento</label>
-                            <input type="text" class="form-control @error('complemento') is-invalid @enderror" id="complemento" name="complemento" value="{{ old('complemento') }}">
-                            @error('complemento')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-4 mb-3">
-                            <label for="bairro" class="form-label">Bairro</label>
-                            <input type="text" class="form-control @error('bairro') is-invalid @enderror" id="bairro" name="bairro" value="{{ old('bairro') }}">
-                            @error('bairro')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <div class="col-md-4 mb-3">
-                            <label for="cidade" class="form-label">Cidade</label>
-                            <input type="text" class="form-control @error('cidade') is-invalid @enderror" id="cidade" name="cidade" value="{{ old('cidade') }}">
-                            @error('cidade')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <div class="col-md-4 mb-3">
-                            <label for="uf" class="form-label">UF</label>
-                            <input type="text" class="form-control @error('uf') is-invalid @enderror" id="uf" name="uf" value="{{ old('uf') }}" maxlength="2">
-                            @error('uf')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-4 mb-3">
-                            <label for="nome_contato" class="form-label">Nome do Contato</label>
-                            <input type="text" class="form-control @error('nome_contato') is-invalid @enderror" id="nome_contato" name="nome_contato" value="{{ old('nome_contato') }}">
-                            @error('nome_contato')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <div class="col-12 mb-3">
-                            <label class="form-label d-block">Flag</label>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input @error('flag') is-invalid @enderror" type="checkbox" name="flag[]" id="flag_cliente" value="cliente" {{ is_array(old('flag')) && in_array('cliente', old('flag')) ? 'checked' : '' }}>
-                                <label class="form-check-label" for="flag_cliente">Cliente</label>
-                            </div>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input @error('flag') is-invalid @enderror" type="checkbox" name="flag[]" id="flag_fornecedor" value="fornecedor" {{ is_array(old('flag')) && in_array('fornecedor', old('flag')) ? 'checked' : '' }}>
-                                <label class="form-check-label" for="flag_fornecedor">Fornecedor</label>
-                            </div>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input @error('flag') is-invalid @enderror" type="checkbox" name="flag[]" id="flag_revendedor" value="revendedor" {{ is_array(old('flag')) && in_array('revendedor', old('flag')) ? 'checked' : '' }}>
-                                <label class="form-check-label" for="flag_revendedor">Revendedor</label>
-                            </div>
-                            @error('flag')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                    </div>
-
-                    <div class="user-credentials" style="display: none;">
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="usuario" class="form-label">Usuário</label>
-                                <input type="text" class="form-control @error('usuario') is-invalid @enderror" id="usuario" name="usuario" value="{{ old('usuario') }}">
-                                @error('usuario')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            <div class="col-md-6 mb-3">
-                                <label for="senha" class="form-label">Senha</label>
-                                <div class="input-group">
-                                    <input type="password" class="form-control @error('senha') is-invalid @enderror" id="senha" name="senha">
-                                    <button class="btn btn-outline-secondary" type="button" id="togglePassword">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                </div>
-                                @error('senha')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="submit" class="btn btn-primary" form="formFornecedor">Salvar</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<style>
-/* Animação de slide para o modal */
-.modal.fade .modal-dialog.modal-end {
-    transform: translate(100%, 0);
-    transition: transform .3s ease-out;
-}
-
-.modal.show .modal-dialog.modal-end {
-    transform: translate(0, 0);
-}
-
-/* Ajuste para o modal ocupar toda a altura */
-.modal-content.min-vh-100 {
-    border-radius: 0;
-}
-
-/* Ajustes para mobile */
-@media (max-width: 768px) {
-    .modal-dialog.modal-end {
-        margin: 0;
-        max-width: 100%;
-        width: 100%;
-        height: 100%;
-    }
-
-    .modal-content.min-vh-100 {
-        min-height: 100vh !important;
-    }
-
-    .modal-body {
-        padding: 1rem;
-    }
-
-    .row {
-        margin-right: -0.5rem;
-        margin-left: -0.5rem;
-    }
-
-    .col-md-2, .col-md-3, .col-md-4, .col-md-6, .col-12 {
-        padding-right: 0.5rem;
-        padding-left: 0.5rem;
-    }
-}
-</style>
-
 @push('scripts')
 <script>
 $(document).ready(function() {
-    // Função para atualizar campos baseado no tipo de pessoa
-    function updateTipoPessoa() {
-        var tipoPessoa = $('#tipo_pessoa').val();
-        if (tipoPessoa === 'F') {
-            $('#razao_social').closest('.col-md-4').hide();
-            $('#nome').closest('.col-md-4').show();
-        } else {
-            $('#razao_social').closest('.col-md-4').show();
-            $('#nome').closest('.col-md-4').hide();
-        }
+    // Função para converter string formatada em número
+    function parseFormattedNumber(value) {
+        if (!value) return 0;
+        return parseFloat(value.replace(/[^\d,.-]/g, '').replace(',', '.'));
     }
 
-    // Atualiza campos quando o tipo de pessoa muda
-    $('#tipo_pessoa').on('change', updateTipoPessoa);
-
-    // Atualiza campos na inicialização e quando o modal abre
-    $('#modalFornecedor').on('show.bs.modal', function() {
-        updateTipoPessoa();
-        $('#flag_fornecedor').prop('checked', true);
-        updateUserCredentials();
-    });
-
-    // Função para atualizar visibilidade dos campos de usuário/senha
-    function updateUserCredentials() {
-        var showCredentials = $('#flag_cliente').is(':checked') || $('#flag_revendedor').is(':checked');
-        $('.user-credentials').toggle(showCredentials);
+    // Função para formatar número como moeda
+    function formatCurrency(value) {
+        return value.toLocaleString('pt-BR', { 
+            minimumFractionDigits: 2, 
+            maximumFractionDigits: 2 
+        });
     }
 
-    // Atualiza campos quando as flags mudam
-    $('#flag_cliente, #flag_revendedor').on('change', updateUserCredentials);
-
-    // Máscaras para os campos
-    $('#documento').on('input', function() {
-        var tipoPessoa = $('#tipo_pessoa').val();
-        var valor = $(this).val().replace(/\D/g, '');
-        
-        if (tipoPessoa === 'F') {
-            if (valor.length <= 11) {
-                valor = valor.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
-            }
-        } else {
-            if (valor.length <= 14) {
-                valor = valor.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
-            }
+    // Inicializa as máscaras
+    $('.money').mask('#.##0,00', { 
+        reverse: true,
+        onChange: function(value, e) {
+            calculatePrices();
         }
-        
-        $(this).val(valor);
     });
-
-    $('#phone, #whatsapp').mask('(00) 00000-0000');
-    $('#cep').mask('00000-000');
-
-    // Toggle de visibilidade da senha
-    $('#togglePassword').on('click', function() {
-        var senhaInput = $('#senha');
-        var tipo = senhaInput.attr('type');
-        
-        senhaInput.attr('type', tipo === 'password' ? 'text' : 'password');
-        $(this).find('i').toggleClass('fa-eye fa-eye-slash');
+    
+    $('.percentage').mask('##0,00', { 
+        reverse: true,
+        onChange: function(value, e) {
+            calculatePrices();
+        }
     });
-
-    // Busca CEP
-    $('#cep').on('blur', function() {
-        var cep = $(this).val().replace(/\D/g, '');
-        
-        if (cep.length === 8) {
-            // Adiciona spinner e desabilita campos
-            $(this).attr('disabled', true);
-            $('#rua, #bairro, #cidade, #uf').attr('disabled', true);
-            $(this).after('<div class="spinner-border spinner-border-sm ms-2" role="status"><span class="visually-hidden">Buscando CEP...</span></div>');
-
-            // Faz a requisição
-            $.getJSON(`https://viacep.com.br/ws/${cep}/json/`)
-                .done(function(data) {
-                    if (!data.erro) {
-                        $('#rua').val(data.logradouro);
-                        $('#bairro').val(data.bairro);
-                        $('#cidade').val(data.localidade);
-                        $('#uf').val(data.uf);
-                        $('#numero').focus();
-                    } else {
-                        toastr.error('CEP não encontrado');
-                    }
-                })
-                .fail(function() {
-                    toastr.error('Erro ao buscar CEP. Tente novamente.');
-                })
-                .always(function() {
-                    // Remove spinner e reabilita campos
-                    $('#cep').attr('disabled', false);
-                    $('#rua, #bairro, #cidade, #uf').attr('disabled', false);
-                    $('#cep').next('.spinner-border').remove();
-                });
+    
+    $('.decimal').mask('##0,000', { 
+        reverse: true,
+        onChange: function(value, e) {
+            calculatePrices();
         }
     });
 
-    // Salvar Marca via AJAX
-    $('#quickBrandForm').on('submit', function(e) {
-        e.preventDefault();
-        var form = $(this);
-        var submitButton = form.find('button[type="submit"]');
-        
-        // Desabilita o botão e mostra loading
-        submitButton.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Salvando...');
-        
-        $.ajax({
-            url: form.attr('action'),
-            type: 'POST',
-            data: form.serialize(),
-            success: function(response) {
-                if (response.success) {
-                    // Adiciona a nova marca ao select
-                    var newOption = new Option(response.brand.name, response.brand.id, true, true);
-                    $('#brand_id').append(newOption).trigger('change');
-                    
-                    // Limpa o formulário e fecha o modal
-                    form[0].reset();
-                    $('#brandModal').modal('hide');
-                    
-                    toastr.success('Marca cadastrada com sucesso!');
-                }
-            },
-            error: function(xhr) {
-                if (xhr.status === 422) {
-                    var errors = xhr.responseJSON.errors;
-                    Object.keys(errors).forEach(function(field) {
-                        var input = form.find(`[name="${field}"]`);
-                        input.addClass('is-invalid');
-                        input.after(`<div class="invalid-feedback">${errors[field][0]}</div>`);
-                    });
-                }
-                toastr.error('Erro ao cadastrar marca');
-            },
-            complete: function() {
-                // Reabilita o botão e remove loading
-                submitButton.prop('disabled', false).html('Salvar');
-            }
-        });
-    });
+    // Função para calcular os preços
+    function calculatePrices() {
+        // Obtém os valores dos campos
+        var lastPurchasePrice = parseFormattedNumber($('#last_purchase_price').val());
+        var taxPercentage = parseFormattedNumber($('#tax_percentage').val());
+        var freightCost = parseFormattedNumber($('#freight_cost').val());
+        var consumerMarkup = parseFormattedNumber($('#consumer_markup').val());
+        var distributorMarkup = parseFormattedNumber($('#distributor_markup').val());
+        var weightKg = parseFormattedNumber($('#weight_kg').val());
 
-    // Salvar Categoria via AJAX
-    $('#quickCategoryForm').on('submit', function(e) {
-        e.preventDefault();
-        var form = $(this);
-        var submitButton = form.find('button[type="submit"]');
-        
-        // Desabilita o botão e mostra loading
-        submitButton.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Salvando...');
-        
-        $.ajax({
-            url: form.attr('action'),
-            type: 'POST',
-            data: form.serialize(),
-            success: function(response) {
-                if (response.success) {
-                    // Adiciona a nova categoria ao select
-                    var newOption = new Option(response.category.name, response.category.id, true, true);
-                    $('#category_id').append(newOption).trigger('change');
-                    
-                    // Limpa o formulário e fecha o modal
-                    form[0].reset();
-                    $('#categoryModal').modal('hide');
-                    
-                    toastr.success('Categoria cadastrada com sucesso!');
-                }
-            },
-            error: function(xhr) {
-                if (xhr.status === 422) {
-                    var errors = xhr.responseJSON.errors;
-                    Object.keys(errors).forEach(function(field) {
-                        var input = form.find(`[name="${field}"]`);
-                        input.addClass('is-invalid');
-                        input.after(`<div class="invalid-feedback">${errors[field][0]}</div>`);
-                    });
-                }
-                toastr.error('Erro ao cadastrar categoria');
-            },
-            complete: function() {
-                // Reabilita o botão e remove loading
-                submitButton.prop('disabled', false).html('Salvar');
-            }
-        });
-    });
-
-    // Salvar Fornecedor via AJAX
-    $('#formFornecedor').on('submit', function(e) {
-        e.preventDefault();
-        var form = $(this);
-        var submitButton = $('#btnSalvarFornecedor');
-        
-        // Remove mensagens de erro anteriores
-        form.find('.is-invalid').removeClass('is-invalid');
-        form.find('.invalid-feedback').remove();
-        
-        // Desabilita o botão e mostra loading
-        submitButton.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Salvando...');
-        
-        var formData = new FormData(form[0]);
-        
-        $.ajax({
-            url: form.attr('action'),
-            type: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function(response) {
-                if (response.success) {
-                    // Adiciona o novo fornecedor ao select
-                    var displayName = response.supplier.nome || response.supplier.razao_social;
-                    var newOption = new Option(displayName, response.supplier.id, true, true);
-                    $('#supplier_id').append(newOption).trigger('change');
-                    
-                    // Limpa o formulário e fecha o modal
-                    form[0].reset();
-                    $('#modalFornecedor').modal('hide');
-                    
-                    toastr.success('Fornecedor cadastrado com sucesso!');
-                }
-            },
-            error: function(xhr) {
-                if (xhr.status === 422) {
-                    var errors = xhr.responseJSON.errors;
-                    Object.keys(errors).forEach(function(field) {
-                        var input = form.find(`[name="${field}"]`);
-                        input.addClass('is-invalid');
-                        input.after(`<div class="invalid-feedback">${errors[field][0]}</div>`);
-                    });
-                }
-                toastr.error('Erro ao cadastrar fornecedor');
-            },
-            complete: function() {
-                // Reabilita o botão e remove loading
-                submitButton.prop('disabled', false).html('Salvar');
-            }
-        });
-    });
-
-    // Inicialização das máscaras monetárias e percentuais
-    $(document).ready(function() {
-        // Aplica máscara monetária aos campos de preço
-        $('#consumer_price, #distributor_price, #sale_price, #last_purchase_price, #unit_cost, #freight_cost').each(function() {
-            $(this).maskMoney({
-                prefix: 'R$ ',
-                allowNegative: false,
-                thousands: '.',
-                decimal: ',',
-                affixesStay: true,
-                precision: 2
-            });
+        console.log('Valores para cálculo:', {
+            lastPurchasePrice,
+            taxPercentage,
+            freightCost,
+            consumerMarkup,
+            distributorMarkup,
+            weightKg
         });
 
-        // Se houver valores pré-preenchidos, formata-os (campos monetários)
-        $('#consumer_price, #distributor_price, #sale_price, #last_purchase_price, #unit_cost, #freight_cost').each(function() {
-            var value = $(this).val();
-            if (value) {
-                $(this).maskMoney('mask', value);
-            }
+        // Calcula o custo unitário considerando o peso
+        var freightPerUnit = weightKg > 0 ? freightCost * weightKg : freightCost;
+        var unitCost = lastPurchasePrice * (1 + (taxPercentage/100)) + freightPerUnit;
+        
+        // Calcula o preço consumidor
+        var consumerPrice = unitCost * (1 + (consumerMarkup/100));
+        
+        // Calcula o preço distribuidor
+        var distributorPrice = unitCost * (1 + (distributorMarkup/100));
+
+        console.log('Resultados calculados:', {
+            freightPerUnit,
+            unitCost,
+            consumerPrice,
+            distributorPrice
         });
 
-        // Aplica máscara de porcentagem
-        $('#tax_percentage, #consumer_markup, #distributor_markup').each(function() {
-            $(this).maskMoney({
-                suffix: ' %',
-                allowNegative: false,
-                thousands: '.',
-                decimal: ',',
-                affixesStay: true,
-                precision: 2
-            });
-        });
+        // Atualiza os campos de exibição
+        $('#unit_cost').val(formatCurrency(unitCost));
+        $('#consumer_price').val(formatCurrency(consumerPrice));
+        $('#distributor_price').val(formatCurrency(distributorPrice));
 
-        // Se houver valores pré-preenchidos, formata-os (campos percentuais)
-        $('#tax_percentage, #consumer_markup, #distributor_markup').each(function() {
-            var value = $(this).val();
-            if (value) {
-                $(this).maskMoney('mask', value);
-            }
-        });
+        // Atualiza os campos hidden
+        $('input[name="unit_cost"]').val(unitCost.toFixed(2));
+        $('input[name="consumer_price"]').val(consumerPrice.toFixed(2));
+        $('input[name="distributor_price"]').val(distributorPrice.toFixed(2));
+    }
 
-        // Atualiza preços quando os markups mudam
-        $('#consumer_markup, #distributor_markup').on('change', function() {
-            var value = $(this).val().replace(/[^0-9,]/g, '').replace(',', '.');
-            if (!isNaN(value)) {
-                // Aqui você pode adicionar a lógica para calcular os preços baseados no markup
-                console.log('Markup alterado:', value);
-            }
-        });
-    });
+    // Eventos para recalcular os preços
+    $('#last_purchase_price, #tax_percentage, #freight_cost, #consumer_markup, #distributor_markup, #weight_kg')
+        .on('input', calculatePrices)
+        .on('change', calculatePrices);
 
-    // Limpa erros ao abrir os modais
-    $('.modal').on('show.bs.modal', function() {
-        var form = $(this).find('form');
-        form.find('.is-invalid').removeClass('is-invalid');
-        form.find('.invalid-feedback').remove();
-    });
+    // Calcula os preços iniciais
+    calculatePrices();
 });
 </script>
 @endpush

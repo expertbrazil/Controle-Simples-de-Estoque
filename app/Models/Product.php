@@ -38,7 +38,7 @@ class Product extends Model
         'distributor_markup',
         'distributor_price',
         'image',
-        'active'
+        'status'
     ];
 
     protected $casts = [
@@ -54,7 +54,7 @@ class Product extends Model
         'consumer_price' => 'decimal:2',
         'distributor_markup' => 'decimal:2',
         'distributor_price' => 'decimal:2',
-        'active' => 'boolean'
+        'status' => 'boolean'
     ];
 
     protected $attributes = [
@@ -70,7 +70,7 @@ class Product extends Model
         'consumer_price' => '0.00',
         'distributor_markup' => '0.00',
         'distributor_price' => '0.00',
-        'active' => true
+        'status' => true
     ];
 
     protected $appends = [

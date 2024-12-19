@@ -30,8 +30,39 @@ class SupplierController extends Controller
             // Remove formatação do documento
             $data['documento'] = preg_replace('/[^0-9]/', '', $data['documento']);
             
+            // Remove formatação do telefone e whatsapp
+            if (isset($data['phone'])) {
+                $data['phone'] = preg_replace('/[^0-9]/', '', $data['phone']);
+            }
+            if (isset($data['whatsapp'])) {
+                $data['whatsapp'] = preg_replace('/[^0-9]/', '', $data['whatsapp']);
+            }
+            
+            // Remove formatação do CEP
+            if (isset($data['cep'])) {
+                $data['cep'] = preg_replace('/[^0-9]/', '', $data['cep']);
+            }
+            
             // Garante que status seja um booleano
             $data['status'] = $request->has('status') && $request->status == '1';
+
+            // Trata o array de flags
+            if (!isset($data['flag'])) {
+                $data['flag'] = ['fornecedor'];
+            }
+
+            // Se for cliente ou revendedor, valida usuário e senha
+            if (in_array('cliente', $data['flag']) || in_array('revendedor', $data['flag'])) {
+                if (empty($data['usuario']) || empty($data['senha'])) {
+                    return response()->json([
+                        'success' => false,
+                        'errors' => [
+                            'usuario' => ['O usuário é obrigatório para clientes e revendedores'],
+                            'senha' => ['A senha é obrigatória para clientes e revendedores']
+                        ]
+                    ], 422);
+                }
+            }
 
             $supplier = Supplier::create($data);
 
@@ -44,7 +75,7 @@ class SupplierController extends Controller
             \Log::error('Erro ao cadastrar fornecedor: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Erro ao cadastrar fornecedor.'
+                'message' => 'Erro ao cadastrar fornecedor: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -61,15 +92,46 @@ class SupplierController extends Controller
 
     public function update(Request $request, Supplier $supplier)
     {
-        $data = $request->all();
-        
-        // Remove formatação do documento
-        $data['documento'] = preg_replace('/[^0-9]/', '', $data['documento']);
-        
-        // Garante que status seja um booleano
-        $data['status'] = $request->has('status') && $request->status == '1';
+        $validator = new SupplierValidation();
+        $validated = $request->validate($validator->rules($supplier->id), $validator->messages());
 
         try {
+            $data = $validated;
+            
+            // Remove formatação do documento
+            $data['documento'] = preg_replace('/[^0-9]/', '', $data['documento']);
+            
+            // Remove formatação do telefone e whatsapp
+            if (isset($data['phone'])) {
+                $data['phone'] = preg_replace('/[^0-9]/', '', $data['phone']);
+            }
+            if (isset($data['whatsapp'])) {
+                $data['whatsapp'] = preg_replace('/[^0-9]/', '', $data['whatsapp']);
+            }
+            
+            // Remove formatação do CEP
+            if (isset($data['cep'])) {
+                $data['cep'] = preg_replace('/[^0-9]/', '', $data['cep']);
+            }
+            
+            // Garante que status seja um booleano
+            $data['status'] = $request->has('status') && $request->status == '1';
+
+            // Trata o array de flags
+            if (!isset($data['flag'])) {
+                $data['flag'] = ['fornecedor'];
+            }
+
+            // Se for cliente ou revendedor, valida usuário e senha
+            if (in_array('cliente', $data['flag']) || in_array('revendedor', $data['flag'])) {
+                if (empty($data['usuario']) || empty($data['senha'])) {
+                    return back()->withErrors([
+                        'usuario' => 'O usuário é obrigatório para clientes e revendedores',
+                        'senha' => 'A senha é obrigatória para clientes e revendedores'
+                    ])->withInput();
+                }
+            }
+
             $supplier->update($data);
             return redirect()->route('suppliers.index')->with('success', 'Fornecedor atualizado com sucesso!');
         } catch (\Exception $e) {
@@ -98,13 +160,13 @@ class SupplierController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Status atualizado com sucesso!'
+                'message' => 'Status atualizado com sucesso!',
+                'status' => $supplier->status
             ]);
         } catch (\Exception $e) {
-            \Log::error('Erro ao atualizar status do fornecedor: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Erro ao atualizar status'
+                'message' => 'Erro ao atualizar status.'
             ], 500);
         }
     }

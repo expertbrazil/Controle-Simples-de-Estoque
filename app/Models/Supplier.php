@@ -31,14 +31,18 @@ class Supplier extends Model
         'bairro',
         'cidade',
         'uf',
+        'nome_contato',
         'flag',
         'usuario',
         'senha',
-        'nome_contato'
+        'observacoes',
+        'inscricao_estadual',
+        'inscricao_municipal'
     ];
 
     protected $casts = [
         'status' => 'boolean',
+        'flag' => 'array',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime'
@@ -46,7 +50,12 @@ class Supplier extends Model
 
     protected $attributes = [
         'status' => true,
-        'tipo_pessoa' => self::PESSOA_JURIDICA
+        'tipo_pessoa' => self::PESSOA_JURIDICA,
+        'flag' => '["fornecedor"]'
+    ];
+
+    protected $hidden = [
+        'senha'
     ];
 
     protected $dates = ['deleted_at'];
@@ -100,16 +109,31 @@ class Supplier extends Model
     public function getFormattedWhatsappAttribute()
     {
         $whatsapp = preg_replace('/[^0-9]/', '', $this->whatsapp);
-        return '(' . substr($whatsapp, 0, 2) . ') ' . 
-               substr($whatsapp, 2, 5) . '-' . 
-               substr($whatsapp, 7);
+        $length = strlen($whatsapp);
+
+        if ($length === 11) {
+            return '(' . substr($whatsapp, 0, 2) . ') ' . 
+                   substr($whatsapp, 2, 5) . '-' . 
+                   substr($whatsapp, 7);
+        }
+
+        if ($length === 10) {
+            return '(' . substr($whatsapp, 0, 2) . ') ' . 
+                   substr($whatsapp, 2, 4) . '-' . 
+                   substr($whatsapp, 6);
+        }
+
+        return $whatsapp;
     }
 
     // Formatação do CEP
     public function getFormattedCepAttribute()
     {
         $cep = preg_replace('/[^0-9]/', '', $this->cep);
-        return substr($cep, 0, 5) . '-' . substr($cep, 5, 3);
+        if (strlen($cep) === 8) {
+            return substr($cep, 0, 5) . '-' . substr($cep, 5);
+        }
+        return $cep;
     }
 
     // Endereço completo

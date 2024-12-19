@@ -334,7 +334,7 @@ class SaleController extends BaseController
                     $query->where('name', 'LIKE', "%{$term}%")
                           ->orWhere('sku', 'LIKE', "%{$term}%");
                 })
-                ->select('id', 'name', 'sku', 'price', 'stock_quantity', 'image')
+                ->select('id', 'name', 'sku', 'price', 'stock_quantity', 'image', 'consumer_price', 'distributor_price')
                 ->take(10)
                 ->get();
 
@@ -350,7 +350,8 @@ class SaleController extends BaseController
                     'value' => $product->name,
                     'name' => $product->name,
                     'sku' => $product->sku,
-                    'price' => number_format($product->price, 2, '.', ''),
+                    'consumer_price' => number_format($product->consumer_price, 2, '.', ''),
+                    'distributor_price' => number_format($product->distributor_price, 2, '.', ''),
                     'stock' => $product->stock_quantity,
                     'image_url' => $imageUrl
                 ];
@@ -383,14 +384,15 @@ class SaleController extends BaseController
                 });
             }
             
-            $products = $productsQuery->select('id', 'name', 'sku', 'price', 'stock_quantity as stock', 'image')
+            $products = $productsQuery->select('id', 'name', 'sku', 'price', 'stock_quantity as stock', 'image', 'consumer_price', 'distributor_price')
                 ->get()
                 ->map(function($product) {
                     return [
                         'id' => $product->id,
                         'name' => $product->name,
                         'sku' => $product->sku,
-                        'price' => number_format($product->price, 2, '.', ''),
+                        'consumer_price' => number_format($product->consumer_price, 2, '.', ''),
+                        'distributor_price' => number_format($product->distributor_price, 2, '.', ''),
                         'stock' => $product->stock,
                         'image_url' => $product->image 
                             ? asset('imagens/produtos/' . $product->image)

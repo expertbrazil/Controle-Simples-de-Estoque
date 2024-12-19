@@ -124,8 +124,8 @@
                                         </span>
                                     </td>
                                     <td class="text-center">
-                                        <span class="badge {{ $product->active ? 'bg-success' : 'bg-danger' }}">
-                                            {{ $product->active ? 'Ativo' : 'Inativo' }}
+                                        <span class="badge {{ $product->status ? 'bg-success' : 'bg-danger' }}">
+                                            {{ $product->status ? 'Ativo' : 'Inativo' }}
                                         </span>
                                     </td>
                                     <td>

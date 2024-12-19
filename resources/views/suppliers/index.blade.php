@@ -43,7 +43,7 @@
                                 <td>{{ $supplier->email }}</td>
                                 <td>
                                     @if($supplier->flag)
-                                        @foreach(json_decode($supplier->flag) as $flag)
+                                        @foreach($supplier->flag as $flag)
                                             <span class="badge bg-secondary">{{ ucfirst($flag) }}</span>
                                         @endforeach
                                     @endif

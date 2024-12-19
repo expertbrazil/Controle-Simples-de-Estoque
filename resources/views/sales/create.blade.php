@@ -15,6 +15,16 @@
                 <!-- Categorias serão inseridas aqui dinamicamente -->
             </div>
         </div>
+        <div class="price-type-selector mb-3">
+            <div class="btn-group w-100">
+                <button type="button" class="btn btn-outline-primary active" data-price-type="consumer">
+                    <i class="bi bi-person"></i> Preço Consumidor
+                </button>
+                <button type="button" class="btn btn-outline-primary" data-price-type="distributor">
+                    <i class="bi bi-shop"></i> Preço Distribuidor
+                </button>
+            </div>
+        </div>
         <div class="products-grid" id="products-grid">
             <!-- Produtos serão listados aqui -->
         </div>
@@ -178,6 +188,7 @@
     $(document).ready(function() {
         let cart = [];
         let allProducts = [];
+        let selectedPriceType = 'consumer'; // Tipo de preço padrão
 
         // Função para formatar valor em reais
         function formatMoney(value) {
@@ -193,105 +204,71 @@
             return parseFloat(value).toFixed(2);
         }
 
+        // Manipulador de seleção de tipo de preço
+        $('.price-type-selector .btn').click(function() {
+            $('.price-type-selector .btn').removeClass('active');
+            $(this).addClass('active');
+            selectedPriceType = $(this).data('price-type');
+            updateProductsGrid(allProducts); // Atualiza a grade com os novos preços
+            updateCart(); // Atualiza o carrinho com os novos preços
+        });
+
         // Carregar produtos inicialmente
         loadProducts();
 
         function loadProducts() {
             console.log('Iniciando carregamento de produtos...');
             $.get('/products/for-sale')
-                .done(function(response) {
-                    console.log('Produtos carregados:', response);
-                    allProducts = response;
-                    displayProducts(allProducts);
+                .done(function(products) {
+                    allProducts = products;
+                    updateProductsGrid(products);
                 })
                 .fail(function(error) {
                     console.error('Erro ao carregar produtos:', error);
-                    alert('Erro ao carregar produtos. Por favor, recarregue a página.');
+                    alert('Erro ao carregar produtos. Por favor, tente novamente.');
                 });
         }
 
-        // Busca de produtos
-        $('#product-search').on('input', function() {
-            let query = $(this).val().toLowerCase();
-            
-            if (query.length === 0) {
-                displayProducts(allProducts);
-                return;
-            }
-
-            let filteredProducts = allProducts.filter(product => 
-                product.name.toLowerCase().includes(query) || 
-                (product.sku && product.sku.toLowerCase().includes(query))
-            );
-            
-            displayProducts(filteredProducts);
-        });
-
-        // Exibir produtos
-        function displayProducts(products) {
+        function updateProductsGrid(products) {
             let html = '';
             products.forEach(product => {
-                const imageUrl = product.image_url || '/images/produtos/no-image.jpg';
-                    
+                const price = selectedPriceType === 'consumer' ? product.consumer_price : product.distributor_price;
                 html += `
-                    <div class="col">
-                        <div class="card h-100 product-card">
-                            <img src="${imageUrl}" class="card-img-top product-img" alt="${product.name}">
-                            <div class="card-body">
-                                <h5 class="card-title">${product.name}</h5>
-                                <p class="card-text">
-                                    SKU: ${product.sku || 'N/A'}<br>
-                                    Estoque: ${product.stock}
-                                </p>
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <span class="price">R$ ${product.price}</span>
-                                    <button class="btn btn-primary add-to-cart" 
-                                            data-id="${product.id}"
-                                            data-name="${product.name}"
-                                            data-price="${product.price}"
-                                            data-stock="${product.stock}">
-                                        <i class="bi bi-cart-plus"></i> Adicionar ao Carrinho
-                                    </button>
-                                </div>
-                            </div>
+                    <div class="product-card" data-id="${product.id}">
+                        <div class="product-image">
+                            <img src="${product.image_url}" alt="${product.name}">
                         </div>
-                    </div>`;
+                        <div class="product-info">
+                            <h5>${product.name}</h5>
+                            <p class="sku">SKU: ${product.sku}</p>
+                            <p class="price">${formatMoney(price)}</p>
+                            <p class="stock">Estoque: ${product.stock}</p>
+                        </div>
+                    </div>
+                `;
             });
             $('#products-grid').html(html);
-
-            // Adicionar evento aos botões
-            $('.add-to-cart').click(function() {
-                const button = $(this);
-                const product = {
-                    id: button.data('id'),
-                    name: button.data('name'),
-                    price: parseFloat(button.data('price')),
-                    stock: parseInt(button.data('stock')),
-                    quantity: 1
-                };
-                addToCart(product);
-            });
         }
 
         function addToCart(product) {
+            const price = selectedPriceType === 'consumer' ? product.consumer_price : product.distributor_price;
             const existingItem = cart.find(item => item.id === product.id);
             
             if (existingItem) {
                 if (existingItem.quantity < product.stock) {
                     existingItem.quantity++;
-                    toastr.success('Quantidade atualizada no carrinho');
                 } else {
-                    toastr.warning('Quantidade máxima atingida');
+                    alert('Quantidade máxima atingida para este produto');
                     return;
                 }
             } else {
-                if (product.stock > 0) {
-                    cart.push(product);
-                    toastr.success('Produto adicionado ao carrinho');
-                } else {
-                    toastr.error('Produto sem estoque');
-                    return;
-                }
+                cart.push({
+                    id: product.id,
+                    name: product.name,
+                    price: parseFloat(price),
+                    quantity: 1,
+                    stock: product.stock
+                });
             }
             
             updateCart();
@@ -306,141 +283,171 @@
                 subtotal += total;
                 
                 html += `
-                    <div class="cart-item mb-2">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="mb-0">${item.name}</h6>
-                                <small class="text-muted">
-                                    ${formatMoney(item.price)} x ${item.quantity} = ${formatMoney(total)}
-                                </small>
-                            </div>
-                            <div class="btn-group btn-group-sm">
-                                <button class="btn btn-outline-primary decrease-quantity" data-index="${index}">
-                                    <i class="bi bi-dash"></i>
-                                </button>
-                                <button class="btn btn-outline-primary increase-quantity" data-index="${index}">
-                                    <i class="bi bi-plus"></i>
-                                </button>
-                                <button class="btn btn-outline-danger remove-from-cart" data-index="${index}">
-                                    <i class="bi bi-trash"></i>
-                                </button>
+                    <div class="cart-item">
+                        <div class="item-info">
+                            <h6>${item.name}</h6>
+                            <div class="quantity-controls">
+                                <button class="btn btn-sm btn-outline-secondary decrease-qty" data-index="${index}">-</button>
+                                <span class="quantity">${item.quantity}</span>
+                                <button class="btn btn-sm btn-outline-secondary increase-qty" data-index="${index}">+</button>
                             </div>
                         </div>
-                    </div>`;
+                        <div class="item-price">
+                            <p>${formatMoney(item.price)} x ${item.quantity}</p>
+                            <p class="total">${formatMoney(total)}</p>
+                            <button class="btn btn-sm btn-danger remove-item" data-index="${index}">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
             });
-
+            
             $('#cart-items').html(html);
+            updateTotals(subtotal);
+        }
+
+        function updateTotals(subtotal) {
+            const discount = parseFloat($('#discount-input').val());
+            const total = subtotal - (subtotal * discount / 100);
             $('#cart-subtotal').text(formatMoney(subtotal));
+            $('#cart-total').text(formatMoney(total));
+        }
+
+        // Busca de produtos
+        $('#product-search').on('input', function() {
+            let query = $(this).val().toLowerCase();
             
-            // Atualizar botões de quantidade
-            $('.decrease-quantity').click(function() {
-                const index = $(this).data('index');
-                if (cart[index].quantity > 1) {
-                    cart[index].quantity--;
-                    updateCart();
-                    toastr.success('Quantidade atualizada');
-                }
-            });
+            if (query.length === 0) {
+                updateProductsGrid(allProducts);
+                return;
+            }
+
+            let filteredProducts = allProducts.filter(product => 
+                product.name.toLowerCase().includes(query) || 
+                (product.sku && product.sku.toLowerCase().includes(query))
+            );
             
-            $('.increase-quantity').click(function() {
-                const index = $(this).data('index');
-                if (cart[index].quantity < cart[index].stock) {
-                    cart[index].quantity++;
-                    updateCart();
-                    toastr.success('Quantidade atualizada');
-                } else {
-                    toastr.warning('Quantidade máxima atingida');
-                }
-            });
-            
-            $('.remove-from-cart').click(function() {
-                const index = $(this).data('index');
-                cart.splice(index, 1);
+            updateProductsGrid(filteredProducts);
+        });
+
+        // Adicionar evento aos botões
+        $('#products-grid').on('click', '.product-card', function() {
+            const product = {
+                id: $(this).data('id'),
+                name: $(this).find('.product-info h5').text(),
+                consumer_price: parseFloat($(this).find('.product-info .price').text().replace('R$ ', '').replace('.', '').replace(',', '.')),
+                distributor_price: parseFloat($(this).find('.product-info .price').text().replace('R$ ', '').replace('.', '').replace(',', '.')),
+                stock: parseInt($(this).find('.product-info .stock').text().replace('Estoque: ', ''))
+            };
+            addToCart(product);
+        });
+
+        // Atualizar botões de quantidade
+        $('#cart-items').on('click', '.decrease-qty', function() {
+            const index = $(this).data('index');
+            if (cart[index].quantity > 1) {
+                cart[index].quantity--;
                 updateCart();
-                toastr.success('Produto removido do carrinho');
-            });
+            }
+        });
+        
+        $('#cart-items').on('click', '.increase-qty', function() {
+            const index = $(this).data('index');
+            if (cart[index].quantity < cart[index].stock) {
+                cart[index].quantity++;
+                updateCart();
+            } else {
+                alert('Quantidade máxima atingida para este produto');
+            }
+        });
+        
+        $('#cart-items').on('click', '.remove-item', function() {
+            const index = $(this).data('index');
+            cart.splice(index, 1);
+            updateCart();
+        });
 
-            // CEP autocomplete
-            $('#cep').on('blur', function() {
-                const cep = $(this).val().replace(/\D/g, '');
-                if (cep.length === 8) {
-                    $.get(`https://viacep.com.br/ws/${cep}/json/`, function(data) {
-                        if (!data.erro) {
-                            $('#endereco').val(data.logradouro);
-                            $('#bairro').val(data.bairro);
-                            $('#cidade').val(data.localidade);
-                        }
-                    });
-                }
-            });
-
-            // Handle new customer form submission
-            $('#salvarNovoCliente').click(function() {
-                const formData = new FormData($('#novoClienteForm')[0]);
-                
-                $.ajax({
-                    url: '/customers',
-                    type: 'POST',
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    success: function(response) {
-                        if (response.success) {
-                            // Update the cliente selecionado section
-                            $('#clienteId').val(response.customer.id);
-                            $('#clienteNome').text(response.customer.nome);
-                            $('#clienteInfo').text(`CPF: ${response.customer.cpf || 'N/A'} - Tel: ${response.customer.telefone || 'N/A'}`);
-                            $('#clienteSelecionado').show();
-                            
-                            // Close the modal
-                            $('#novoClienteModal').modal('hide');
-                            
-                            // Clear the form
-                            $('#novoClienteForm')[0].reset();
-                            
-                            // Show success message
-                            alert('Cliente cadastrado com sucesso!');
-                        } else {
-                            alert('Erro ao cadastrar cliente. Por favor, tente novamente.');
-                        }
-                    },
-                    error: function(xhr) {
-                        alert('Erro ao cadastrar cliente. Por favor, tente novamente.');
+        // CEP autocomplete
+        $('#cep').on('blur', function() {
+            const cep = $(this).val().replace(/\D/g, '');
+            if (cep.length === 8) {
+                $.get(`https://viacep.com.br/ws/${cep}/json/`, function(data) {
+                    if (!data.erro) {
+                        $('#endereco').val(data.logradouro);
+                        $('#bairro').val(data.bairro);
+                        $('#cidade').val(data.localidade);
                     }
                 });
-            });
+            }
+        });
 
-            // Format CPF input
-            $('#cpf').on('input', function() {
-                let value = $(this).val().replace(/\D/g, '');
-                if (value.length <= 11) {
-                    value = value.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
-                    $(this).val(value);
-                }
-            });
-
-            // Format telefone input
-            $('#telefone').on('input', function() {
-                let value = $(this).val().replace(/\D/g, '');
-                if (value.length <= 11) {
-                    if (value.length === 11) {
-                        value = value.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+        // Handle new customer form submission
+        $('#salvarNovoCliente').click(function() {
+            const formData = new FormData($('#novoClienteForm')[0]);
+            
+            $.ajax({
+                url: '/customers',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    if (response.success) {
+                        // Update the cliente selecionado section
+                        $('#clienteId').val(response.customer.id);
+                        $('#clienteNome').text(response.customer.nome);
+                        $('#clienteInfo').text(`CPF: ${response.customer.cpf || 'N/A'} - Tel: ${response.customer.telefone || 'N/A'}`);
+                        $('#clienteSelecionado').show();
+                        
+                        // Close the modal
+                        $('#novoClienteModal').modal('hide');
+                        
+                        // Clear the form
+                        $('#novoClienteForm')[0].reset();
+                        
+                        // Show success message
+                        alert('Cliente cadastrado com sucesso!');
                     } else {
-                        value = value.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+                        alert('Erro ao cadastrar cliente. Por favor, tente novamente.');
                     }
-                    $(this).val(value);
+                },
+                error: function(xhr) {
+                    alert('Erro ao cadastrar cliente. Por favor, tente novamente.');
                 }
             });
+        });
 
-            // Format CEP input
-            $('#cep').on('input', function() {
-                let value = $(this).val().replace(/\D/g, '');
-                if (value.length <= 8) {
-                    value = value.replace(/(\d{5})(\d{3})/, '$1-$2');
-                    $(this).val(value);
+        // Format CPF input
+        $('#cpf').on('input', function() {
+            let value = $(this).val().replace(/\D/g, '');
+            if (value.length <= 11) {
+                value = value.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+                $(this).val(value);
+            }
+        });
+
+        // Format telefone input
+        $('#telefone').on('input', function() {
+            let value = $(this).val().replace(/\D/g, '');
+            if (value.length <= 11) {
+                if (value.length === 11) {
+                    value = value.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+                } else {
+                    value = value.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
                 }
-            });
-        }
+                $(this).val(value);
+            }
+        });
+
+        // Format CEP input
+        $('#cep').on('input', function() {
+            let value = $(this).val().replace(/\D/g, '');
+            if (value.length <= 8) {
+                value = value.replace(/(\d{5})(\d{3})/, '$1-$2');
+                $(this).val(value);
+            }
+        });
     });
 </script>
 @endpush

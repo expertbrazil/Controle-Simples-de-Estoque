@@ -6,6 +6,8 @@ use App\Models\User;
 use Database\Seeders\AdminUserSeeder;
 use Database\Seeders\DefaultUserSeeder;
 use Database\Seeders\CategorySeeder;
+use Database\Seeders\InitialDataSeeder;
+use Database\Seeders\ParametersSeeder;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -25,8 +27,8 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             DefaultUserSeeder::class,
-            CategorySeeder::class,
-            AdminUserSeeder::class
+            InitialDataSeeder::class,
+            ParametersSeeder::class
         ]);
     }
 }

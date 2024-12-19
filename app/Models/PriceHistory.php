@@ -3,23 +3,24 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class PriceHistory extends Model
 {
-    protected $table = 'price_history';
+    use HasFactory;
+
+    protected $table = 'price_histories';
 
     protected $fillable = [
         'product_id',
-        'last_purchase_price',
+        'user_id',
         'unit_cost',
         'consumer_price',
         'distributor_price',
-        'change_reason',
-        'user_id'
+        'reason'
     ];
 
     protected $casts = [
-        'last_purchase_price' => 'decimal:2',
         'unit_cost' => 'decimal:2',
         'consumer_price' => 'decimal:2',
         'distributor_price' => 'decimal:2'
@@ -33,5 +34,20 @@ class PriceHistory extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function getFormattedUnitCostAttribute()
+    {
+        return 'R$ ' . number_format($this->unit_cost, 2, ',', '.');
+    }
+
+    public function getFormattedConsumerPriceAttribute()
+    {
+        return 'R$ ' . number_format($this->consumer_price, 2, ',', '.');
+    }
+
+    public function getFormattedDistributorPriceAttribute()
+    {
+        return 'R$ ' . number_format($this->distributor_price, 2, ',', '.');
     }
 }

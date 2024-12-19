@@ -10,9 +10,9 @@ use App\Models\PriceHistory;
 use App\Rules\ProductValidation;
 use App\Services\ImageService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Routing\Controller as BaseController;
 
 class ProductController extends BaseController
@@ -90,34 +90,44 @@ class ProductController extends BaseController
 
     public function store(Request $request)
     {
-        $validatedData = $request->validate(
-            ProductValidation::rules(),
-            ProductValidation::messages()
-        );
-
         try {
-            // Calcula os preços
-            $prices = $this->calculatePrices($validatedData);
+            // Log dos dados recebidos
+            \Log::info('Dados recebidos:', $request->all());
+
+            $validatedData = $request->validate(
+                ProductValidation::rules(),
+                ProductValidation::messages()
+            );
+
+            // Log dos dados validados
+            \Log::info('Dados validados:', $validatedData);
+
+            DB::beginTransaction();
+
+            // Remove formatação dos valores monetários e percentuais
+            $this->formatMonetaryAndPercentageFields($validatedData);
+            
+            // Log após formatação
+            \Log::info('Dados após formatação:', $validatedData);
+
+            // Trata a imagem se houver
+            if ($request->hasFile('image')) {
+                $validatedData['image'] = $this->imageService->store($request->file('image'), 'produtos');
+            }
 
             // Prepara os dados para salvar
             $productData = array_merge($validatedData, [
-                'unit_cost' => $prices['unit_cost'],
-                'consumer_price' => $prices['consumer_price'],
-                'distributor_price' => $prices['distributor_price'],
-                'image' => $validatedData['stored_image'] ?? null,
-                'status' => $request->has('status')
+                'status' => $request->input('status', true)
             ]);
 
-            // Remove formatação dos valores monetários e percentuais
-            $this->formatMonetaryAndPercentageFields($productData);
-
-            DB::beginTransaction();
+            // Log dos dados finais
+            \Log::info('Dados finais para salvar:', $productData);
 
             // Cria o produto
             $product = Product::create($productData);
 
             // Registra o histórico inicial de preços
-            $this->updatePrices($product, $productData, 'Cadastro inicial do produto');
+            $this->updatePriceHistory($product, $productData, 'Cadastro inicial do produto');
 
             DB::commit();
 
@@ -127,17 +137,40 @@ class ProductController extends BaseController
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Erro ao criar produto: ' . $e->getMessage());
+            \Log::error('Erro ao criar produto: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            
+            // Log da requisição que causou o erro
+            \Log::error('Dados da requisição que causou o erro:', $request->all());
             
             return redirect()
                 ->back()
                 ->withInput()
-                ->with('error', 'Erro ao cadastrar produto. Por favor, tente novamente.');
+                ->withErrors($e->getMessage())
+                ->with('error', 'Erro ao cadastrar produto: ' . $e->getMessage());
         }
     }
 
     public function edit(Product $product)
     {
+        // Formata os valores monetários e percentuais para exibição
+        $formattedProduct = [
+            'last_purchase_price' => number_format($product->last_purchase_price ?? 0, 2, ',', '.'),
+            'freight_cost' => number_format($product->freight_cost ?? 0, 2, ',', '.'),
+            'tax_percentage' => number_format($product->tax_percentage ?? 0, 2, ',', '.'),
+            'consumer_markup' => number_format($product->consumer_markup ?? 0, 2, ',', '.'),
+            'distributor_markup' => number_format($product->distributor_markup ?? 0, 2, ',', '.'),
+            'weight_kg' => number_format($product->weight_kg ?? 0, 3, ',', '.'),
+            'unit_cost' => number_format($product->unit_cost ?? 0, 2, ',', '.'),
+            'consumer_price' => number_format($product->consumer_price ?? 0, 2, ',', '.'),
+            'distributor_price' => number_format($product->distributor_price ?? 0, 2, ',', '.')
+        ];
+
+        // Adiciona os valores formatados ao produto
+        foreach ($formattedProduct as $key => $value) {
+            $product->setAttribute($key . '_formatted', $value);
+        }
+
         $categories = Category::where('status', true)
             ->orderBy('name')
             ->get();
@@ -162,33 +195,60 @@ class ProductController extends BaseController
 
     public function update(Request $request, Product $product)
     {
-        $validatedData = $request->validate(
-            ProductValidation::rules($product->id),
-            ProductValidation::messages()
-        );
-
         try {
-            // Calcula os preços
-            $prices = $this->calculatePrices($validatedData);
+            // Log dos dados recebidos
+            \Log::info('Dados recebidos no update:', $request->all());
+
+            // Remove formatação dos valores monetários e percentuais antes da validação
+            $data = $request->all();
+            $this->formatMonetaryAndPercentageFields($data);
+
+            // Log dos dados após formatação
+            \Log::info('Dados após formatação:', $data);
+
+            // Cria uma nova request com os dados formatados
+            $formattedRequest = new Request($data);
+
+            // Valida os dados formatados
+            $validatedData = $formattedRequest->validate(
+                ProductValidation::rules($product),
+                ProductValidation::messages()
+            );
+
+            // Log dos dados validados
+            \Log::info('Dados validados:', $validatedData);
+
+            DB::beginTransaction();
+
+            // Trata a imagem se houver
+            if ($request->hasFile('image')) {
+                // Remove a imagem antiga se existir
+                if ($product->image) {
+                    $this->imageService->delete($product->image, 'produtos');
+                }
+                $validatedData['image'] = $this->imageService->store($request->file('image'), 'produtos');
+            }
 
             // Prepara os dados para salvar
             $productData = array_merge($validatedData, [
-                'unit_cost' => $prices['unit_cost'],
-                'consumer_price' => $prices['consumer_price'],
-                'distributor_price' => $prices['distributor_price'],
-                'status' => $request->has('status')
+                'status' => $request->boolean('status')
             ]);
 
-            // Remove formatação dos valores monetários e percentuais
-            $this->formatMonetaryAndPercentageFields($productData);
+            // Log dos dados finais
+            \Log::info('Dados finais para update:', $productData);
 
-            DB::beginTransaction();
+            // Verifica se houve alteração nos preços
+            $priceChanged = $product->unit_cost != $productData['unit_cost'] ||
+                           $product->consumer_price != $productData['consumer_price'] ||
+                           $product->distributor_price != $productData['distributor_price'];
 
             // Atualiza o produto
             $product->update($productData);
 
-            // Registra o histórico de preços
-            $this->updatePrices($product, $productData, 'Atualização do produto');
+            // Registra o histórico de preços se houve alteração
+            if ($priceChanged) {
+                $this->updatePriceHistory($product, $productData, 'Atualização do produto');
+            }
 
             DB::commit();
 
@@ -198,106 +258,114 @@ class ProductController extends BaseController
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Erro ao atualizar produto: ' . $e->getMessage());
+            \Log::error('Erro ao atualizar produto: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
             
             return redirect()
                 ->back()
                 ->withInput()
-                ->with('error', 'Erro ao atualizar produto. Por favor, tente novamente.');
+                ->withErrors(['error' => 'Erro ao atualizar produto: ' . $e->getMessage()]);
         }
     }
 
-    protected function updatePrices(Product $product, array $data, string $reason = null)
+    /**
+     * Remove formatação dos campos monetários e percentuais
+     */
+    private function formatMonetaryAndPercentageFields(&$data)
     {
-        $oldPrices = [
-            'last_purchase_price' => $product->last_purchase_price,
-            'unit_cost' => $product->unit_cost,
-            'consumer_price' => $product->consumer_price,
-            'distributor_price' => $product->distributor_price,
+        // Lista de campos monetários
+        $moneyFields = [
+            'last_purchase_price',
+            'freight_cost',
+            'unit_cost',
+            'consumer_price',
+            'distributor_price'
         ];
 
-        $newPrices = [
-            'last_purchase_price' => $data['last_purchase_price'] ?? $product->last_purchase_price,
-            'unit_cost' => $data['unit_cost'] ?? $product->unit_cost,
-            'consumer_price' => $data['consumer_price'] ?? $product->consumer_price,
-            'distributor_price' => $data['distributor_price'] ?? $product->distributor_price,
+        // Lista de campos percentuais
+        $percentageFields = [
+            'tax_percentage',
+            'consumer_markup',
+            'distributor_markup'
         ];
 
-        // Verifica se houve alteração em algum preço
-        $pricesChanged = false;
-        foreach ($newPrices as $field => $value) {
-            if (bccomp($value, $oldPrices[$field], 2) !== 0) {
-                $pricesChanged = true;
-                break;
+        // Lista de campos decimais
+        $decimalFields = [
+            'weight_kg'
+        ];
+
+        // Função auxiliar para limpar e converter valores
+        $cleanValue = function($value) {
+            if (is_numeric($value)) {
+                return (float) $value;
             }
-        }
+            
+            if (!is_string($value) || empty($value)) {
+                return 0.0;
+            }
 
-        // Se houve alteração, registra no histórico
-        if ($pricesChanged) {
-            PriceHistory::create([
-                'product_id' => $product->id,
-                'last_purchase_price' => $newPrices['last_purchase_price'],
-                'unit_cost' => $newPrices['unit_cost'],
-                'consumer_price' => $newPrices['consumer_price'],
-                'distributor_price' => $newPrices['distributor_price'],
-                'change_reason' => $reason,
-                'user_id' => auth()->id()
-            ]);
-        }
+            // Remove todos os caracteres exceto números, vírgula e ponto
+            $value = preg_replace('/[^0-9,.-]/', '', $value);
+            
+            // Se não houver números após a limpeza
+            if ($value === '' || $value === ',' || $value === '.') {
+                return 0.0;
+            }
 
-        return $newPrices;
-    }
+            // Garante que há apenas uma vírgula ou ponto
+            $parts = preg_split('/[,.]/', $value);
+            if (count($parts) > 2) {
+                $integer = str_replace([',', '.'], '', substr($value, 0, strrpos($value, $parts[count($parts)-1]) - 1));
+                $decimal = end($parts);
+                $value = $integer . '.' . $decimal;
+            } else {
+                $value = str_replace(',', '.', $value);
+            }
 
-    protected function calculatePrices($data)
-    {
-        // Remove formatação do preço de compra
-        $lastPurchasePrice = floatval(str_replace(['R$', '.', ','], ['', '', '.'], $data['last_purchase_price']));
-        
-        // Remove formatação do percentual de impostos
-        $taxPercentage = floatval(str_replace(['%', ','], ['', '.'], $data['tax_percentage']));
-        
-        // Remove formatação do custo de frete
-        $freightCost = floatval(str_replace(['R$', '.', ','], ['', '', '.'], $data['freight_cost']));
-        
-        // Calcula o custo unitário
-        $unitCost = $lastPurchasePrice + ($lastPurchasePrice * ($taxPercentage / 100)) + $freightCost;
-        
-        // Remove formatação das margens
-        $consumerMarkup = floatval(str_replace(['%', ','], ['', '.'], $data['consumer_markup']));
-        $distributorMarkup = floatval(str_replace(['%', ','], ['', '.'], $data['distributor_markup']));
-        
-        // Calcula os preços de venda
-        $consumerPrice = $unitCost * (1 + ($consumerMarkup / 100));
-        $distributorPrice = $unitCost * (1 + ($distributorMarkup / 100));
-        
-        return [
-            'unit_cost' => $unitCost,
-            'consumer_price' => $consumerPrice,
-            'distributor_price' => $distributorPrice
-        ];
-    }
+            return (float) $value;
+        };
 
-    protected function formatMonetaryAndPercentageFields(array &$data)
-    {
-        // Remove formatação dos valores monetários
-        $moneyFields = ['last_purchase_price', 'freight_cost', 'consumer_price', 'distributor_price'];
+        // Processa campos monetários
         foreach ($moneyFields as $field) {
             if (isset($data[$field])) {
-                $data[$field] = floatval(str_replace(['R$', '.', ','], ['', '', '.'], $data[$field]));
+                $data[$field] = $cleanValue($data[$field]);
             }
         }
 
-        // Remove formatação dos percentuais
-        $percentageFields = ['tax_percentage', 'consumer_markup', 'distributor_markup'];
+        // Processa campos percentuais
         foreach ($percentageFields as $field) {
             if (isset($data[$field])) {
-                $data[$field] = floatval(str_replace(['%', ','], ['', '.'], $data[$field]));
+                $data[$field] = $cleanValue($data[$field]);
             }
         }
 
-        // Remove formatação do peso
-        if (isset($data['weight_kg'])) {
-            $data['weight_kg'] = floatval(str_replace(['kg', ','], ['', '.'], $data['weight_kg']));
+        // Processa campos decimais
+        foreach ($decimalFields as $field) {
+            if (isset($data[$field])) {
+                $data[$field] = $cleanValue($data[$field]);
+            }
         }
+
+        // Log para debug
+        \Log::info('Campos formatados:', [
+            'money_fields' => array_intersect_key($data, array_flip($moneyFields)),
+            'percentage_fields' => array_intersect_key($data, array_flip($percentageFields)),
+            'decimal_fields' => array_intersect_key($data, array_flip($decimalFields))
+        ]);
+    }
+
+    /**
+     * Registra o histórico de preços
+     */
+    private function updatePriceHistory(Product $product, $data, $reason)
+    {
+        PriceHistory::create([
+            'product_id' => $product->id,
+            'unit_cost' => $data['unit_cost'],
+            'consumer_price' => $data['consumer_price'],
+            'distributor_price' => $data['distributor_price'],
+            'reason' => $reason,
+            'user_id' => auth()->id()
+        ]);
     }
 }
