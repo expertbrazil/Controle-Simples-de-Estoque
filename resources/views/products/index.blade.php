@@ -101,14 +101,12 @@
                                     <td class="text-center">{{ $product->id }}</td>
                                     <td class="align-middle">
                                         @if($product->image)
-                                            <img src="/images/produtos/{{ $product->image }}" 
+                                            <img src="{{ asset('images/produtos/' . $product->image) }}" 
                                                  alt="{{ $product->name }}" 
-                                                 class="product-thumbnail"
-                                                 style="width: 50px; height: 50px; object-fit: cover;">
+                                                 class="img-thumbnail"
+                                                 style="max-height: 50px;">
                                         @else
-                                            <div class="text-center" style="width: 50px; height: 50px; background-color: #f8f9fa; display: flex; align-items: center; justify-content: center; border-radius: 4px;">
-                                                <i class="bi bi-image text-muted"></i>
-                                            </div>
+                                            <span class="text-muted">Sem imagem</span>
                                         @endif
                                     </td>
                                     <td>{{ $product->sku }}</td>

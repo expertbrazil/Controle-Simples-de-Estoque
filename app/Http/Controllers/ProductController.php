@@ -46,10 +46,19 @@ class ProductController extends BaseController
 
         $products = $query->paginate(10)->withQueryString();
 
-        // Carregar dados para os filtros sem nenhuma validação
-        $categories = Category::orderBy('name')->get();
-        $brands = Brand::orderBy('name')->get();
-        $suppliers = Supplier::orderBy('nome')->get();
+        // Carregar dados para os filtros apenas ativos
+        $categories = Category::where('status', true)
+            ->orderBy('name')
+            ->get();
+
+        $brands = Brand::where('status', true)
+            ->orderBy('name')
+            ->get();
+
+        $suppliers = Supplier::where('status', true)
+            ->whereJsonContains('flag', 'fornecedor')
+            ->orderBy('nome')
+            ->get();
 
         $products->getCollection()->transform(function ($product) {
             $product->formatted_consumer_price = 'R$ ' . number_format($product->consumer_price, 2, ',', '.');
@@ -75,6 +84,7 @@ class ProductController extends BaseController
             ->get();
 
         $suppliers = Supplier::where('status', true)
+            ->whereJsonContains('flag', 'fornecedor')
             ->orderBy('nome')
             ->get()
             ->map(function($supplier) {
@@ -180,6 +190,7 @@ class ProductController extends BaseController
             ->get();
 
         $suppliers = Supplier::where('status', true)
+            ->whereJsonContains('flag', 'fornecedor')
             ->orderBy('nome')
             ->get()
             ->map(function($supplier) {

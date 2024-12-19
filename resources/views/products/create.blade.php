@@ -380,91 +380,87 @@
 @push('scripts')
 <script>
 $(document).ready(function() {
-    // Função para converter string formatada em número
-    function parseFormattedNumber(value) {
-        if (!value) return 0;
-        return parseFloat(value.replace(/[^\d,.-]/g, '').replace(',', '.'));
-    }
-
     // Função para formatar número como moeda
-    function formatCurrency(value) {
+    function formatMoney(value) {
         return value.toLocaleString('pt-BR', { 
             minimumFractionDigits: 2, 
             maximumFractionDigits: 2 
         });
     }
 
-    // Inicializa as máscaras
+    // Função para converter string formatada em número
+    function parseFormattedNumber(value) {
+        if (!value) return 0;
+        return parseFloat(value.replace(/\./g, '').replace(',', '.'));
+    }
+
+    // Função para calcular todos os valores
+    function calculatePrices() {
+        // Valores de entrada
+        const purchasePrice = parseFormattedNumber($('#last_purchase_price').val());
+        const taxPercentage = parseFormattedNumber($('#tax_percentage').val());
+        const freightCost = parseFormattedNumber($('#freight_cost').val());
+        const weightKg = parseFormattedNumber($('#weight_kg').val());
+        const consumerMarkup = parseFormattedNumber($('#consumer_markup').val());
+        const distributorMarkup = parseFormattedNumber($('#distributor_markup').val());
+
+        // Cálculo do imposto
+        const taxValue = purchasePrice * (taxPercentage / 100);
+
+        // Cálculo do frete por peso
+        const freightTotal = freightCost * weightKg;
+
+        // Cálculo do custo unitário
+        const unitCost = purchasePrice + taxValue + freightTotal;
+
+        // Cálculo dos preços finais
+        const consumerPrice = unitCost * (1 + (consumerMarkup / 100));
+        const distributorPrice = unitCost * (1 + (distributorMarkup / 100));
+
+        // Atualiza os campos de exibição
+        $('#unit_cost').val(formatMoney(unitCost));
+        $('#consumer_price').val(formatMoney(consumerPrice));
+        $('#distributor_price').val(formatMoney(distributorPrice));
+
+        // Atualiza os campos hidden com valores não formatados
+        $('input[name="unit_cost"]').val(unitCost.toFixed(2));
+        $('input[name="consumer_price"]').val(consumerPrice.toFixed(2));
+        $('input[name="distributor_price"]').val(distributorPrice.toFixed(2));
+
+        // Log para debug
+        console.log('Valores calculados:', {
+            'Valor da compra': purchasePrice,
+            'Imposto (%)': taxPercentage,
+            'Valor do imposto': taxValue,
+            'Frete': freightCost,
+            'Peso (kg)': weightKg,
+            'Frete total': freightTotal,
+            'Custo unitário': unitCost,
+            'Markup consumidor (%)': consumerMarkup,
+            'Preço consumidor': consumerPrice,
+            'Markup distribuidor (%)': distributorMarkup,
+            'Preço distribuidor': distributorPrice
+        });
+    }
+
+    // Máscara para os campos
     $('.money').mask('#.##0,00', { 
         reverse: true,
-        onChange: function(value, e) {
-            calculatePrices();
-        }
+        onChange: calculatePrices
     });
     
     $('.percentage').mask('##0,00', { 
         reverse: true,
-        onChange: function(value, e) {
-            calculatePrices();
-        }
+        onChange: calculatePrices
     });
     
-    $('.decimal').mask('##0,000', { 
+    $('.weight').mask('##0,000', { 
         reverse: true,
-        onChange: function(value, e) {
-            calculatePrices();
-        }
+        onChange: calculatePrices
     });
 
-    // Função para calcular os preços
-    function calculatePrices() {
-        // Obtém os valores dos campos
-        var lastPurchasePrice = parseFormattedNumber($('#last_purchase_price').val());
-        var taxPercentage = parseFormattedNumber($('#tax_percentage').val());
-        var freightCost = parseFormattedNumber($('#freight_cost').val());
-        var consumerMarkup = parseFormattedNumber($('#consumer_markup').val());
-        var distributorMarkup = parseFormattedNumber($('#distributor_markup').val());
-        var weightKg = parseFormattedNumber($('#weight_kg').val());
-
-        console.log('Valores para cálculo:', {
-            lastPurchasePrice,
-            taxPercentage,
-            freightCost,
-            consumerMarkup,
-            distributorMarkup,
-            weightKg
-        });
-
-        // Calcula o custo unitário considerando o peso
-        var freightPerUnit = weightKg > 0 ? freightCost * weightKg : freightCost;
-        var unitCost = lastPurchasePrice * (1 + (taxPercentage/100)) + freightPerUnit;
-        
-        // Calcula o preço consumidor
-        var consumerPrice = unitCost * (1 + (consumerMarkup/100));
-        
-        // Calcula o preço distribuidor
-        var distributorPrice = unitCost * (1 + (distributorMarkup/100));
-
-        console.log('Resultados calculados:', {
-            freightPerUnit,
-            unitCost,
-            consumerPrice,
-            distributorPrice
-        });
-
-        // Atualiza os campos de exibição
-        $('#unit_cost').val(formatCurrency(unitCost));
-        $('#consumer_price').val(formatCurrency(consumerPrice));
-        $('#distributor_price').val(formatCurrency(distributorPrice));
-
-        // Atualiza os campos hidden
-        $('input[name="unit_cost"]').val(unitCost.toFixed(2));
-        $('input[name="consumer_price"]').val(consumerPrice.toFixed(2));
-        $('input[name="distributor_price"]').val(distributorPrice.toFixed(2));
-    }
-
-    // Eventos para recalcular os preços
-    $('#last_purchase_price, #tax_percentage, #freight_cost, #consumer_markup, #distributor_markup, #weight_kg')
+    // Calcula os preços quando qualquer campo é alterado
+    $('#last_purchase_price, #tax_percentage, #freight_cost, #weight_kg, #consumer_markup, #distributor_markup')
         .on('input', calculatePrices)
         .on('change', calculatePrices);
 
