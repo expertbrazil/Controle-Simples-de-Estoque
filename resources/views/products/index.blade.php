@@ -135,22 +135,32 @@
                                             -
                                         @endif
                                     </td>
-                                    <td>
-                                        <div class="btn-group float-end" role="group">
+                                    <td class="text-end">
+                                        <div class="d-flex gap-2 justify-content-end">
                                             <a href="{{ route('products.edit', $product) }}" 
-                                               class="btn btn-sm btn-primary"
+                                               class="btn btn-sm btn-outline-primary" 
+                                               data-bs-toggle="tooltip" 
                                                title="Editar">
-                                                <i class="bi bi-pencil"></i>
+                                                <i class="bi bi-pencil-square"></i>
                                             </a>
+                                            
+                                            <a href="{{ route('products.price-history', $product) }}" 
+                                               class="btn btn-sm btn-outline-info" 
+                                               data-bs-toggle="tooltip" 
+                                               title="Histórico de Preços">
+                                                <i class="bi bi-clock-history"></i>
+                                            </a>
+
                                             <form action="{{ route('products.destroy', $product) }}" 
                                                   method="POST" 
-                                                  class="d-inline"
-                                                  onsubmit="return confirm('Tem certeza que deseja excluir este produto?')">
+                                                  class="d-inline">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" 
-                                                        class="btn btn-sm btn-danger"
-                                                        title="Excluir">
+                                                        class="btn btn-sm btn-outline-danger" 
+                                                        data-bs-toggle="tooltip" 
+                                                        title="Excluir"
+                                                        onclick="return confirm('Tem certeza que deseja excluir este produto?')">
                                                     <i class="bi bi-trash"></i>
                                                 </button>
                                             </form>
@@ -179,10 +189,36 @@
     font-weight: 500;
     padding: 0.5em 0.75em;
 }
-.btn-group .btn {
-    border-radius: 4px !important;
-    margin: 0 2px;
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    line-height: 1;
+}
+.btn-sm i {
+    font-size: 1rem;
+    line-height: 1;
+    display: block;
+}
+.btn-outline-primary:hover i,
+.btn-outline-info:hover i,
+.btn-outline-danger:hover i {
+    color: white;
+}
+.tooltip {
+    font-size: 0.875rem;
 }
 </style>
 @endpush
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Inicializa os dropdowns do Bootstrap
+    var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'));
+    var dropdownList = dropdownElementList.map(function (dropdownToggleEl) {
+        return new bootstrap.Dropdown(dropdownToggleEl);
+    });
+});
+</script>
+@endpush
+
 @endsection

@@ -11,18 +11,16 @@ class ProductValidation
     {
         return [
             'name' => ['required', 'string', 'max:255'],
+            'sku' => ['nullable', 'string', 'max:50'],
+            'barcode' => ['nullable', 'string', 'max:50'],
             'description' => ['nullable', 'string'],
-            'sku' => ['required', new SkuValidation($product)],
-            'barcode' => ['nullable', new BarcodeValidation($product)],
             'category_id' => ['required', 'exists:categories,id'],
             'brand_id' => ['required', 'exists:brands,id'],
-            'supplier_id' => ['required', 'exists:suppliers,id'],
+            'supplier_id' => ['nullable', 'exists:suppliers,id'],
             'min_stock' => ['required', 'integer', 'min:0'],
             'max_stock' => ['required', 'integer', 'min:0', 'gte:min_stock'],
             'stock_quantity' => ['required', 'integer', 'min:0'],
             'last_purchase_price' => ['required', 'numeric', 'min:0'],
-            'tax_percentage' => ['required', 'numeric', 'min:0'],
-            'freight_cost' => ['required', 'numeric', 'min:0'],
             'weight_kg' => ['required', 'numeric', 'min:0'],
             'consumer_markup' => ['required', 'numeric', 'min:0'],
             'distributor_markup' => ['required', 'numeric', 'min:0'],
@@ -30,7 +28,9 @@ class ProductValidation
             'consumer_price' => ['required', 'numeric', 'min:0'],
             'distributor_price' => ['required', 'numeric', 'min:0'],
             'image' => ['nullable', 'image', 'max:2048'],
-            'status' => ['boolean']
+            'status' => ['boolean'],
+            'consumer_price_list' => ['required', 'exists:price_lists,id'],
+            'distributor_price_list' => ['required', 'exists:price_lists,id']
         ];
     }
 
@@ -39,13 +39,13 @@ class ProductValidation
         return [
             'name.required' => 'O nome do produto é obrigatório.',
             'name.max' => 'O nome do produto não pode ter mais de 255 caracteres.',
-            'sku.required' => 'O SKU é obrigatório.',
+            'sku.max' => 'O SKU não pode ter mais de 50 caracteres.',
+            'barcode.max' => 'O código de barras não pode ter mais de 50 caracteres.',
             'category_id.required' => 'A categoria é obrigatória.',
-            'category_id.exists' => 'A categoria selecionada é inválida.',
+            'category_id.exists' => 'A categoria selecionada não existe.',
             'brand_id.required' => 'A marca é obrigatória.',
-            'brand_id.exists' => 'A marca selecionada é inválida.',
-            'supplier_id.required' => 'O fornecedor é obrigatório.',
-            'supplier_id.exists' => 'O fornecedor selecionado é inválido.',
+            'brand_id.exists' => 'A marca selecionada não existe.',
+            'supplier_id.exists' => 'O fornecedor selecionado não existe.',
             'min_stock.required' => 'O estoque mínimo é obrigatório.',
             'min_stock.integer' => 'O estoque mínimo deve ser um número inteiro.',
             'min_stock.min' => 'O estoque mínimo não pode ser negativo.',
@@ -59,12 +59,6 @@ class ProductValidation
             'last_purchase_price.required' => 'O preço de compra é obrigatório.',
             'last_purchase_price.numeric' => 'O preço de compra deve ser um número.',
             'last_purchase_price.min' => 'O preço de compra não pode ser negativo.',
-            'tax_percentage.required' => 'O percentual de impostos é obrigatório.',
-            'tax_percentage.numeric' => 'O percentual de impostos deve ser um número.',
-            'tax_percentage.min' => 'O percentual de impostos não pode ser negativo.',
-            'freight_cost.required' => 'O custo de frete é obrigatório.',
-            'freight_cost.numeric' => 'O custo de frete deve ser um número.',
-            'freight_cost.min' => 'O custo de frete não pode ser negativo.',
             'weight_kg.required' => 'O peso é obrigatório.',
             'weight_kg.numeric' => 'O peso deve ser um número.',
             'weight_kg.min' => 'O peso não pode ser negativo.',
@@ -85,7 +79,10 @@ class ProductValidation
             'distributor_price.min' => 'O preço para distribuidor não pode ser negativo.',
             'image.image' => 'O arquivo deve ser uma imagem.',
             'image.max' => 'A imagem não pode ter mais de 2MB.',
-            'status.boolean' => 'O status deve ser um valor booleano.'
+            'consumer_price_list.required' => 'A lista de preços para consumidor é obrigatória.',
+            'consumer_price_list.exists' => 'A lista de preços para consumidor selecionada não existe.',
+            'distributor_price_list.required' => 'A lista de preços para distribuidor é obrigatória.',
+            'distributor_price_list.exists' => 'A lista de preços para distribuidor selecionada não existe.'
         ];
     }
 }

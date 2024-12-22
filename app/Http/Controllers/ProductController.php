@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Brand;
 use App\Models\Supplier;
 use App\Models\PriceHistory;
+use App\Models\PriceList;
 use App\Rules\ProductValidation;
 use App\Services\ImageService;
 use Illuminate\Http\Request;
@@ -37,6 +38,37 @@ class ProductController extends BaseController
                   ->orWhere('sku', 'like', "%{$search}%")
                   ->orWhere('barcode', 'like', "%{$search}%");
             });
+        }
+
+        // Filtro por categoria
+        if ($request->filled('category')) {
+            $query->where('category_id', $request->category);
+        }
+
+        // Filtro por marca
+        if ($request->filled('brand')) {
+            $query->where('brand_id', $request->brand);
+        }
+
+        // Filtro por fornecedor
+        if ($request->filled('supplier')) {
+            $query->where('supplier_id', $request->supplier);
+        }
+
+        // Filtro por status do estoque
+        if ($request->filled('stock_status')) {
+            switch ($request->stock_status) {
+                case 'low':
+                    $query->whereColumn('stock_quantity', '<=', 'min_stock')
+                          ->where('stock_quantity', '>', 0);
+                    break;
+                case 'out':
+                    $query->where('stock_quantity', 0);
+                    break;
+                case 'available':
+                    $query->where('stock_quantity', '>', 0);
+                    break;
+            }
         }
 
         // Ordenação
@@ -95,7 +127,10 @@ class ProductController extends BaseController
                 return $supplier;
             });
 
-        return view('products.create', compact('categories', 'brands', 'suppliers'));
+        $distributorPriceLists = PriceList::where('type', 'distributor')->where('is_active', true)->get();
+        $consumerPriceLists = PriceList::where('type', 'consumer')->where('is_active', true)->get();
+
+        return view('products.create', compact('categories', 'brands', 'suppliers', 'distributorPriceLists', 'consumerPriceLists'));
     }
 
     public function store(Request $request)
@@ -104,21 +139,20 @@ class ProductController extends BaseController
             // Log dos dados recebidos
             \Log::info('Dados recebidos:', $request->all());
 
-            $validatedData = $request->validate(
+            // Remove formatação dos valores monetários e percentuais antes da validação
+            $data = $request->all();
+            $this->formatMonetaryAndPercentageFields($data);
+
+            // Cria uma nova request com os dados formatados
+            $formattedRequest = new Request($data);
+
+            // Valida os dados formatados
+            $validatedData = $formattedRequest->validate(
                 ProductValidation::rules(),
                 ProductValidation::messages()
             );
 
-            // Log dos dados validados
-            \Log::info('Dados validados:', $validatedData);
-
             DB::beginTransaction();
-
-            // Remove formatação dos valores monetários e percentuais
-            $this->formatMonetaryAndPercentageFields($validatedData);
-            
-            // Log após formatação
-            \Log::info('Dados após formatação:', $validatedData);
 
             // Trata a imagem se houver
             if ($request->hasFile('image')) {
@@ -150,14 +184,10 @@ class ProductController extends BaseController
             \Log::error('Erro ao criar produto: ' . $e->getMessage());
             \Log::error('Stack trace: ' . $e->getTraceAsString());
             
-            // Log da requisição que causou o erro
-            \Log::error('Dados da requisição que causou o erro:', $request->all());
-            
             return redirect()
                 ->back()
                 ->withInput()
-                ->withErrors($e->getMessage())
-                ->with('error', 'Erro ao cadastrar produto: ' . $e->getMessage());
+                ->withErrors(['error' => 'Erro ao cadastrar produto: ' . $e->getMessage()]);
         }
     }
 
@@ -201,7 +231,10 @@ class ProductController extends BaseController
                 return $supplier;
             });
 
-        return view('products.edit', compact('product', 'categories', 'brands', 'suppliers'));
+        $distributorPriceLists = PriceList::where('type', 'distributor')->where('is_active', true)->get();
+        $consumerPriceLists = PriceList::where('type', 'consumer')->where('is_active', true)->get();
+
+        return view('products.edit', compact('product', 'categories', 'brands', 'suppliers', 'distributorPriceLists', 'consumerPriceLists'));
     }
 
     public function update(Request $request, Product $product)
@@ -279,6 +312,25 @@ class ProductController extends BaseController
         }
     }
 
+    public function updatePrices(Request $request, $id)
+    {
+        try {
+            $product = Product::findOrFail($id);
+            
+            $product->cost_price = $request->cost_price;
+            $product->price = $request->sale_price;
+            $product->save();
+
+            return redirect()
+                ->back()
+                ->with('success', 'Preços do produto atualizados com sucesso!');
+        } catch (\Exception $e) {
+            return redirect()
+                ->back()
+                ->with('error', 'Erro ao atualizar preços: ' . $e->getMessage());
+        }
+    }
+
     public function destroy(Product $product)
     {
         try {
@@ -312,6 +364,35 @@ class ProductController extends BaseController
         }
     }
 
+    public function priceHistory(Product $product)
+    {
+        $priceHistory = PriceHistory::with(['entry', 'user'])
+            ->where('product_id', $product->id)
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+
+        return view('products.price_history', compact('product', 'priceHistory'));
+    }
+
+    public function find(Request $request)
+    {
+        $query = $request->get('query');
+        
+        $products = Product::where('status', true)
+            ->where(function($q) use ($query) {
+                $q->where('name', 'like', "%{$query}%")
+                  ->orWhere('sku', 'like', "%{$query}%")
+                  ->orWhere('barcode', 'like', "%{$query}%");
+            })
+            ->with(['category', 'brand'])
+            ->limit(10)
+            ->get();
+            
+        return response()->json([
+            'products' => $products
+        ]);
+    }
+
     /**
      * Remove formatação dos campos monetários e percentuais
      */
@@ -320,7 +401,6 @@ class ProductController extends BaseController
         // Lista de campos monetários
         $moneyFields = [
             'last_purchase_price',
-            'freight_cost',
             'unit_cost',
             'consumer_price',
             'distributor_price'
@@ -328,7 +408,6 @@ class ProductController extends BaseController
 
         // Lista de campos percentuais
         $percentageFields = [
-            'tax_percentage',
             'consumer_markup',
             'distributor_markup'
         ];
@@ -340,34 +419,40 @@ class ProductController extends BaseController
 
         // Função auxiliar para limpar e converter valores
         $cleanValue = function($value) {
+            // Se já for um número, retorna como float
             if (is_numeric($value)) {
                 return (float) $value;
             }
             
+            // Se for nulo, vazio ou não for string
             if (!is_string($value) || empty($value)) {
                 return 0.0;
             }
 
-            // Remove todos os caracteres exceto números, vírgula e ponto
-            $value = preg_replace('/[^0-9,.-]/', '', $value);
+            // Remove espaços e caracteres especiais exceto números, vírgula e ponto
+            $value = trim(str_replace(['R$', '%', ' '], '', $value));
             
             // Se não houver números após a limpeza
             if ($value === '' || $value === ',' || $value === '.') {
                 return 0.0;
             }
 
-            // Garante que há apenas uma vírgula ou ponto
-            $parts = preg_split('/[,.]/', $value);
-            if (count($parts) > 2) {
-                $integer = str_replace([',', '.'], '', substr($value, 0, strrpos($value, $parts[count($parts)-1]) - 1));
-                $decimal = end($parts);
+            // Substitui vírgula por ponto
+            $value = str_replace(',', '.', $value);
+
+            // Se houver mais de um ponto, mantém apenas o último como decimal
+            if (substr_count($value, '.') > 1) {
+                $parts = explode('.', $value);
+                $decimal = array_pop($parts);
+                $integer = implode('', $parts);
                 $value = $integer . '.' . $decimal;
-            } else {
-                $value = str_replace(',', '.', $value);
             }
 
             return (float) $value;
         };
+
+        // Log antes da formatação
+        \Log::info('Dados antes da formatação:', $data);
 
         // Processa campos monetários
         foreach ($moneyFields as $field) {
@@ -390,26 +475,42 @@ class ProductController extends BaseController
             }
         }
 
-        // Log para debug
-        \Log::info('Campos formatados:', [
-            'money_fields' => array_intersect_key($data, array_flip($moneyFields)),
-            'percentage_fields' => array_intersect_key($data, array_flip($percentageFields)),
-            'decimal_fields' => array_intersect_key($data, array_flip($decimalFields))
-        ]);
+        // Log após a formatação
+        \Log::info('Dados após a formatação:', $data);
     }
 
     /**
      * Registra o histórico de preços
      */
-    private function updatePriceHistory(Product $product, $data, $reason)
+    private function updatePriceHistory(Product $product, $data, $reason = null, $entry_id = null)
     {
-        PriceHistory::create([
-            'product_id' => $product->id,
-            'unit_cost' => $data['unit_cost'],
-            'consumer_price' => $data['consumer_price'],
-            'distributor_price' => $data['distributor_price'],
-            'reason' => $reason,
-            'user_id' => auth()->id()
-        ]);
+        try {
+            // Log dos dados recebidos
+            \Log::info('Dados recebidos para histórico:', $data);
+
+            // Cria o registro de histórico
+            PriceHistory::create([
+                'product_id' => $product->id,
+                'purchase_price' => $data['last_purchase_price'] ?? 0,
+                'freight_cost' => $data['freight_cost'] ?? 0,
+                'tax_percentage' => $data['tax_percentage'] ?? 0,
+                'unit_cost' => $data['unit_cost'] ?? 0,
+                'distributor_markup' => $data['distributor_markup'] ?? 0,
+                'distributor_price' => $data['distributor_price'] ?? 0,
+                'consumer_markup' => $data['consumer_markup'] ?? 0,
+                'consumer_price' => $data['consumer_price'] ?? 0,
+                'user_id' => auth()->id(),
+                'reason' => $reason,
+                'entry_id' => $entry_id
+            ]);
+
+            // Log do registro criado
+            \Log::info('Histórico de preços criado com sucesso');
+
+        } catch (\Exception $e) {
+            \Log::error('Erro ao criar histórico de preços: ' . $e->getMessage());
+            \Log::error($e->getTraceAsString());
+            throw $e;
+        }
     }
 }

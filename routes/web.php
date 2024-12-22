@@ -18,6 +18,8 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\SupplierController;
 use App\Mail\TestEmail;
+use App\Http\Controllers\PriceHistoryController;
+use App\Http\Controllers\PriceListController;
 
 // Rota inicial - redireciona para login ou dashboard
 Route::get('/', function () {
@@ -50,9 +52,15 @@ Route::middleware('auth')->group(function () {
     
     // Produtos
     Route::resource('products', ProductController::class);
+    Route::get('/products/{product}/price-history', [ProductController::class, 'priceHistory'])->name('products.price-history');
     Route::get('products/search', [ProductController::class, 'search'])->name('products.search');
     Route::post('/products/upload-image', [ProductController::class, 'uploadImage'])->name('products.upload-image');
     Route::get('products/{product}/duplicate', [ProductController::class, 'duplicate'])->name('products.duplicate');
+    Route::put('/products/{id}/update-prices', [ProductController::class, 'updatePrices'])->name('products.update-prices');
+    Route::get('/products/find', [ProductController::class, 'find'])->name('products.find');
+    
+    // Listas de Preços
+    Route::resource('price-lists', PriceListController::class);
     
     // PDV
     Route::prefix('pdv')->group(function () {
@@ -68,6 +76,7 @@ Route::middleware('auth')->group(function () {
     
     // Entradas de Produtos
     Route::resource('product-entries', ProductEntryController::class);
+    Route::get('/api/products/search', [ProductEntryController::class, 'searchProducts'])->name('api.products.search');
     
     // Marcas
     Route::resource('brands', BrandController::class);
@@ -77,10 +86,18 @@ Route::middleware('auth')->group(function () {
     Route::resource('suppliers', SupplierController::class);
     Route::post('suppliers/{supplier}/toggle-status', [SupplierController::class, 'toggleStatus'])->name('suppliers.toggle-status');
     
+    // Clientes
+    Route::get('/customers/search', [CustomerController::class, 'search'])->name('customers.search');
+    
     // Parâmetros
     Route::get('/parameters', [ParameterController::class, 'index'])->name('parameters.index');
     Route::post('/parameters', [ParameterController::class, 'store'])->name('parameters.store');
     Route::put('/parameters/smtp', [ParameterController::class, 'updateSmtp'])->name('parameters.update-smtp');
+    
+    // Histórico de Preços
+    Route::get('/price-histories', [PriceHistoryController::class, 'index'])->name('price-histories.index');
+    Route::get('/price-histories/analysis', [PriceHistoryController::class, 'analysis'])->name('price-histories.analysis');
+    Route::get('/price-histories/{product}', [PriceHistoryController::class, 'show'])->name('price-histories.show');
     
     // Teste de E-mail
     Route::post('/test-email', function (Request $request) {

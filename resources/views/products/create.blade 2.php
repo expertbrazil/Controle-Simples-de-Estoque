@@ -7,13 +7,12 @@
             <div class="card">
                 <div class="card-header bg-primary text-white">
                     <h5 class="mb-0">
-                        <i class="bi bi-pencil-square"></i> Editar Produto
+                        <i class="bi bi-plus-circle"></i> Novo Produto
                     </h5>
                 </div>
                 <div class="card-body">
-                    <form action="{{ route('products.update', $product) }}" method="POST" enctype="multipart/form-data">
+                    <form action="{{ route('products.store') }}" method="POST" enctype="multipart/form-data">
                         @csrf
-                        @method('PUT')
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
@@ -23,7 +22,7 @@
                                            class="form-control @error('name') is-invalid @enderror" 
                                            id="name" 
                                            name="name" 
-                                           value="{{ old('name', $product->name) }}" 
+                                           value="{{ old('name') }}" 
                                            required>
                                     @error('name')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -37,7 +36,7 @@
                                            class="form-control @error('sku') is-invalid @enderror" 
                                            id="sku" 
                                            name="sku" 
-                                           value="{{ old('sku', $product->sku) }}" 
+                                           value="{{ old('sku') }}" 
                                            required>
                                     @error('sku')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -53,7 +52,7 @@
                                     <select class="form-select @error('category_id') is-invalid @enderror" id="category_id" name="category_id" required>
                                         <option value="">Selecione uma categoria</option>
                                         @foreach($categories as $category)
-                                            <option value="{{ $category->id }}" {{ old('category_id', $product->category_id) == $category->id ? 'selected' : '' }}>
+                                            <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>
                                                 {{ $category->name }}
                                             </option>
                                         @endforeach
@@ -73,7 +72,7 @@
                                     <select class="form-select @error('brand_id') is-invalid @enderror" id="brand_id" name="brand_id" required>
                                         <option value="">Selecione uma marca</option>
                                         @foreach($brands as $brand)
-                                            <option value="{{ $brand->id }}" {{ old('brand_id', $product->brand_id) == $brand->id ? 'selected' : '' }}>
+                                            <option value="{{ $brand->id }}" {{ old('brand_id') == $brand->id ? 'selected' : '' }}>
                                                 {{ $brand->name }}
                                             </option>
                                         @endforeach
@@ -93,7 +92,7 @@
                                     <select class="form-select @error('supplier_id') is-invalid @enderror" id="supplier_id" name="supplier_id" required>
                                         <option value="">Selecione um fornecedor</option>
                                         @foreach($suppliers as $supplier)
-                                            <option value="{{ $supplier->id }}" {{ old('supplier_id', $product->supplier_id) == $supplier->id ? 'selected' : '' }}>
+                                            <option value="{{ $supplier->id }}" {{ old('supplier_id') == $supplier->id ? 'selected' : '' }}>
                                                 {{ $supplier->nome_display }}
                                             </option>
                                         @endforeach
@@ -117,7 +116,7 @@
                                            class="form-control money @error('last_purchase_price') is-invalid @enderror" 
                                            id="last_purchase_price" 
                                            name="last_purchase_price" 
-                                           value="{{ old('last_purchase_price', number_format($product->last_purchase_price, 2, ',', '.')) }}"
+                                           value="{{ old('last_purchase_price') }}" 
                                            required>
                                 </div>
                                 @error('last_purchase_price')
@@ -126,14 +125,33 @@
                             </div>
 
                             <div class="col-md-4 mb-3">
-                                <label for="weight_kg" class="form-label">Peso (kg) <span class="text-danger">*</span></label>
-                                <input type="text" 
-                                       class="form-control decimal @error('weight_kg') is-invalid @enderror" 
-                                       id="weight_kg" 
-                                       name="weight_kg" 
-                                       value="{{ old('weight_kg', number_format($product->weight_kg, 2, ',', '.')) }}"
-                                       required>
-                                @error('weight_kg')
+                                <label for="tax_percentage" class="form-label">Percentual de Imposto <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="text" 
+                                           class="form-control percentage @error('tax_percentage') is-invalid @enderror" 
+                                           id="tax_percentage" 
+                                           name="tax_percentage" 
+                                           value="{{ old('tax_percentage') }}" 
+                                           required>
+                                    <span class="input-group-text">%</span>
+                                </div>
+                                @error('tax_percentage')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label for="freight_cost" class="form-label">Custo de Frete <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text">R$</span>
+                                    <input type="text" 
+                                           class="form-control money @error('freight_cost') is-invalid @enderror" 
+                                           id="freight_cost" 
+                                           name="freight_cost" 
+                                           value="{{ old('freight_cost') }}" 
+                                           required>
+                                </div>
+                                @error('freight_cost')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
@@ -141,61 +159,68 @@
 
                         <div class="row">
                             <div class="col-md-4 mb-3">
-                                <label for="cost_price" class="form-label">Preço de Custo</label>
+                                <label for="weight_kg" class="form-label">Peso (kg) <span class="text-danger">*</span></label>
                                 <div class="input-group">
-                                    <span class="input-group-text">R$</span>
                                     <input type="text" 
-                                           class="form-control money" 
-                                           id="cost_price" 
-                                           name="cost_price" 
-                                           readonly>
+                                           class="form-control decimal @error('weight_kg') is-invalid @enderror" 
+                                           id="weight_kg" 
+                                           name="weight_kg" 
+                                           value="{{ old('weight_kg') }}" 
+                                           required>
+                                    <span class="input-group-text">kg</span>
                                 </div>
-                                <small class="text-muted">Calculado automaticamente</small>
+                                @error('weight_kg')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
 
                             <div class="col-md-4 mb-3">
-                                <label for="distributor_markup" class="form-label">Markup Distribuidor (%)</label>
-                                <div class="input-group">
-                                    <input type="text" 
-                                           class="form-control percentage @error('distributor_markup') is-invalid @enderror" 
-                                           id="distributor_markup" 
-                                           name="distributor_markup" 
-                                           value="{{ old('distributor_markup', $product->distributor_markup) }}">
-                                    <span class="input-group-text">%</span>
-                                    @error('distributor_markup')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-
-                            <div class="col-md-4 mb-3">
-                                <label for="distributor_price" class="form-label">Preço Distribuidor</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">R$</span>
-                                    <input type="text" 
-                                           class="form-control money" 
-                                           id="distributor_price" 
-                                           name="distributor_price" 
-                                           readonly>
-                                </div>
-                                <small class="text-muted">Calculado automaticamente</small>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-4 mb-3">
-                                <label for="consumer_markup" class="form-label">Markup Consumidor (%)</label>
+                                <label for="consumer_markup" class="form-label">Margem Consumidor <span class="text-danger">*</span></label>
                                 <div class="input-group">
                                     <input type="text" 
                                            class="form-control percentage @error('consumer_markup') is-invalid @enderror" 
                                            id="consumer_markup" 
                                            name="consumer_markup" 
-                                           value="{{ old('consumer_markup', $product->consumer_markup) }}">
+                                           value="{{ old('consumer_markup') }}" 
+                                           required>
                                     <span class="input-group-text">%</span>
-                                    @error('consumer_markup')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
                                 </div>
+                                @error('consumer_markup')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label for="distributor_markup" class="form-label">Margem Distribuidor <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="text" 
+                                           class="form-control percentage @error('distributor_markup') is-invalid @enderror" 
+                                           id="distributor_markup" 
+                                           name="distributor_markup" 
+                                           value="{{ old('distributor_markup') }}" 
+                                           required>
+                                    <span class="input-group-text">%</span>
+                                </div>
+                                @error('distributor_markup')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="unit_cost" class="form-label">Custo Unitário</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">R$</span>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="unit_cost" 
+                                           readonly>
+                                    <input type="hidden" 
+                                           name="unit_cost" 
+                                           value="{{ old('unit_cost', 0) }}">
+                                </div>
+                                <small class="text-muted">Calculado automaticamente</small>
                             </div>
 
                             <div class="col-md-4 mb-3">
@@ -203,36 +228,53 @@
                                 <div class="input-group">
                                     <span class="input-group-text">R$</span>
                                     <input type="text" 
-                                           class="form-control money" 
+                                           class="form-control" 
                                            id="consumer_price" 
-                                           name="consumer_price" 
                                            readonly>
+                                    <input type="hidden" 
+                                           name="consumer_price" 
+                                           value="{{ old('consumer_price', 0) }}">
                                 </div>
                                 <small class="text-muted">Calculado automaticamente</small>
                             </div>
 
+                            <div class="col-md-4 mb-3">
+                                <label for="distributor_price" class="form-label">Preço Distribuidor</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">R$</span>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="distributor_price" 
+                                           readonly>
+                                    <input type="hidden" 
+                                           name="distributor_price" 
+                                           value="{{ old('distributor_price', 0) }}">
+                                </div>
+                                <small class="text-muted">Calculado automaticamente</small>
+                            </div>
+                        </div>
+
+                        <div class="row">
                             <div class="col-md-4 mb-3">
                                 <label for="min_stock" class="form-label">Estoque Mínimo <span class="text-danger">*</span></label>
                                 <input type="number" 
                                        class="form-control @error('min_stock') is-invalid @enderror" 
                                        id="min_stock" 
                                        name="min_stock" 
-                                       value="{{ old('min_stock', $product->min_stock) }}" 
+                                       value="{{ old('min_stock') }}" 
                                        required>
                                 @error('min_stock')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
-                        </div>
 
-                        <div class="row">
                             <div class="col-md-4 mb-3">
                                 <label for="max_stock" class="form-label">Estoque Máximo <span class="text-danger">*</span></label>
                                 <input type="number" 
                                        class="form-control @error('max_stock') is-invalid @enderror" 
                                        id="max_stock" 
                                        name="max_stock" 
-                                       value="{{ old('max_stock', $product->max_stock) }}" 
+                                       value="{{ old('max_stock') }}" 
                                        required>
                                 @error('max_stock')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -245,7 +287,7 @@
                                        class="form-control @error('stock_quantity') is-invalid @enderror" 
                                        id="stock_quantity" 
                                        name="stock_quantity" 
-                                       value="{{ old('stock_quantity', $product->stock_quantity) }}" 
+                                       value="{{ old('stock_quantity', 0) }}" 
                                        required>
                                 @error('stock_quantity')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -259,7 +301,7 @@
                                 <textarea class="form-control @error('description') is-invalid @enderror" 
                                           id="description" 
                                           name="description" 
-                                          rows="3">{{ old('description', $product->description) }}</textarea>
+                                          rows="3">{{ old('description') }}</textarea>
                                 @error('description')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -267,25 +309,28 @@
                         </div>
 
                         <div class="row">
-                            <div class="col-md-12 mb-3">
-                                <label class="form-label">Imagem do Produto</label>
-                                @if($product->image)
-                                    <div class="mb-2">
-                                        <img src="{{ asset('images/produtos/' . $product->image) }}" 
-                                             alt="Imagem atual" 
-                                             class="img-thumbnail"
-                                             style="max-height: 200px;">
-                                    </div>
-                                @endif
+                            <div class="col-md-6 mb-3">
+                                <label for="barcode" class="form-label">Código de Barras</label>
+                                <input type="text" 
+                                       class="form-control @error('barcode') is-invalid @enderror" 
+                                       id="barcode" 
+                                       name="barcode" 
+                                       value="{{ old('barcode') }}">
+                                @error('barcode')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="image" class="form-label">Imagem do Produto</label>
                                 <input type="file" 
                                        class="form-control @error('image') is-invalid @enderror" 
                                        id="image" 
-                                       name="image"
+                                       name="image" 
                                        accept="image/*">
                                 @error('image')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
-                                <small class="text-muted">Deixe em branco para manter a imagem atual</small>
                             </div>
                         </div>
 
@@ -299,7 +344,7 @@
                                                name="status" 
                                                id="status_yes" 
                                                value="1"
-                                               {{ old('status', $product->status) ? 'checked' : '' }}>
+                                               {{ old('status', true) ? 'checked' : '' }}>
                                         <label class="form-check-label" for="status_yes">Ativo</label>
                                     </div>
                                     <div class="form-check">
@@ -308,7 +353,7 @@
                                                name="status" 
                                                id="status_no" 
                                                value="0"
-                                               {{ old('status', $product->status) ? '' : 'checked' }}>
+                                               {{ old('status', true) ? '' : 'checked' }}>
                                         <label class="form-check-label" for="status_no">Inativo</label>
                                     </div>
                                 </div>
@@ -332,100 +377,99 @@
     </div>
 </div>
 
-@push('styles')
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
-@endpush
-
 @push('scripts')
 <script>
 $(document).ready(function() {
-    // Inicializar Select2
-    $('.form-select').select2({
-        theme: 'bootstrap-5'
-    });
-
-    // Máscaras para campos monetários e percentuais
-    $('.money').mask('#.##0,00', {reverse: true});
-    $('.percentage').mask('##0,00', {reverse: true});
-    $('.weight').mask('#.##0,000', {reverse: true});
-
-    // Função para converter string em número
-    function parseDecimal(value) {
+    // Função para converter string formatada em número
+    function parseFormattedNumber(value) {
         if (!value) return 0;
-        return parseFloat(value.replace(/\./g, '').replace(',', '.'));
+        return parseFloat(value.replace(/[^\d,.-]/g, '').replace(',', '.'));
     }
 
     // Função para formatar número como moeda
-    function formatMoney(value) {
-        return value.toFixed(2).replace('.', ',');
-    }
-
-    // Função para calcular custo unitário
-    function calculateUnitCost() {
-        let purchasePrice = parseDecimal($('input[name="last_purchase_price"]').val());
-
-        // Custo unitário é a soma do preço de compra 
-        let unitCost = purchasePrice;
-
-        return unitCost;
-    }
-
-    // Função para calcular preço final
-    function calculatePrice(unitCost, markup) {
-        unitCost = parseDecimal(unitCost.toString());
-        markup = parseDecimal(markup);
-        
-        // Aplica a margem sobre o custo unitário
-        let price = unitCost * (1 + markup/100);
-        
-        return price;
-    }
-
-    // Função para atualizar todos os preços
-    function updateAllPrices() {
-        // Primeiro calcula o custo unitário
-        let unitCost = calculateUnitCost();
-
-        // Atualiza o campo de custo unitário
-        $('input[name="cost_price"]').val(formatMoney(unitCost));
-
-        let consumerMarkup = $('input[name="consumer_markup"]').val();
-        let distributorMarkup = $('input[name="distributor_markup"]').val();
-
-        // Calcula e atualiza preço consumidor
-        let consumerPrice = calculatePrice(unitCost, consumerMarkup);
-        $('input[name="consumer_price"]').val(formatMoney(consumerPrice));
-
-        // Calcula e atualiza preço distribuidor
-        let distributorPrice = calculatePrice(unitCost, distributorMarkup);
-        $('input[name="distributor_price"]').val(formatMoney(distributorPrice));
-
-        // Log para debug
-        console.log('Valores calculados:', {
-            'Preço de compra': parseDecimal($('input[name="last_purchase_price"]').val()),
-            'Custo unitário': unitCost,
-            'Markup consumidor (%)': parseDecimal(consumerMarkup),
-            'Preço consumidor': consumerPrice,
-            'Markup distribuidor (%)': parseDecimal(distributorMarkup),
-            'Preço distribuidor': distributorPrice
+    function formatCurrency(value) {
+        return value.toLocaleString('pt-BR', { 
+            minimumFractionDigits: 2, 
+            maximumFractionDigits: 2 
         });
     }
 
-    // Eventos para recalcular preços
-    $('input[name="last_purchase_price"], input[name="consumer_markup"], input[name="distributor_markup"]').on('change keyup', function() {
-        updateAllPrices();
+    // Inicializa as máscaras
+    $('.money').mask('#.##0,00', { 
+        reverse: true,
+        onChange: function(value, e) {
+            calculatePrices();
+        }
+    });
+    
+    $('.percentage').mask('##0,00', { 
+        reverse: true,
+        onChange: function(value, e) {
+            calculatePrices();
+        }
+    });
+    
+    $('.decimal').mask('##0,000', { 
+        reverse: true,
+        onChange: function(value, e) {
+            calculatePrices();
+        }
     });
 
-    // Antes de enviar o formulário, garantir que os valores estão corretos
-    $('form').on('submit', function() {
-        // Atualiza uma última vez para garantir
-        updateAllPrices();
-        return true;
-    });
+    // Função para calcular os preços
+    function calculatePrices() {
+        // Obtém os valores dos campos
+        var lastPurchasePrice = parseFormattedNumber($('#last_purchase_price').val());
+        var taxPercentage = parseFormattedNumber($('#tax_percentage').val());
+        var freightCost = parseFormattedNumber($('#freight_cost').val());
+        var consumerMarkup = parseFormattedNumber($('#consumer_markup').val());
+        var distributorMarkup = parseFormattedNumber($('#distributor_markup').val());
+        var weightKg = parseFormattedNumber($('#weight_kg').val());
 
-    // Calcular preços iniciais
-    updateAllPrices();
+        console.log('Valores para cálculo:', {
+            lastPurchasePrice,
+            taxPercentage,
+            freightCost,
+            consumerMarkup,
+            distributorMarkup,
+            weightKg
+        });
+
+        // Calcula o custo unitário considerando o peso
+        var freightPerUnit = weightKg > 0 ? freightCost * weightKg : freightCost;
+        var unitCost = lastPurchasePrice * (1 + (taxPercentage/100)) + freightPerUnit;
+        
+        // Calcula o preço consumidor
+        var consumerPrice = unitCost * (1 + (consumerMarkup/100));
+        
+        // Calcula o preço distribuidor
+        var distributorPrice = unitCost * (1 + (distributorMarkup/100));
+
+        console.log('Resultados calculados:', {
+            freightPerUnit,
+            unitCost,
+            consumerPrice,
+            distributorPrice
+        });
+
+        // Atualiza os campos de exibição
+        $('#unit_cost').val(formatCurrency(unitCost));
+        $('#consumer_price').val(formatCurrency(consumerPrice));
+        $('#distributor_price').val(formatCurrency(distributorPrice));
+
+        // Atualiza os campos hidden
+        $('input[name="unit_cost"]').val(unitCost.toFixed(2));
+        $('input[name="consumer_price"]').val(consumerPrice.toFixed(2));
+        $('input[name="distributor_price"]').val(distributorPrice.toFixed(2));
+    }
+
+    // Eventos para recalcular os preços
+    $('#last_purchase_price, #tax_percentage, #freight_cost, #consumer_markup, #distributor_markup, #weight_kg')
+        .on('input', calculatePrices)
+        .on('change', calculatePrices);
+
+    // Calcula os preços iniciais
+    calculatePrices();
 });
 </script>
 @endpush

@@ -113,14 +113,17 @@ return new class extends Migration
         // Product Entries
         Schema::create('product_entries', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('product_id')->constrained()->onDelete('cascade');
-            $table->integer('quantity');
+            $table->foreignId('product_id')->constrained()->onDelete('restrict');
+            $table->decimal('purchase_price', 10, 2);
+            $table->decimal('tax_percentage', 5, 2)->default(0);
+            $table->decimal('freight_cost', 10, 2)->default(0);
+            $table->decimal('weight_kg', 10, 3);
             $table->decimal('unit_cost', 10, 2);
-            $table->decimal('total_cost', 10, 2);
-            $table->string('invoice_number')->nullable();
-            $table->date('entry_date');
+            $table->integer('quantity');
             $table->text('notes')->nullable();
+            $table->foreignId('user_id')->constrained();
             $table->timestamps();
+            $table->softDeletes();
         });
 
         // Price History

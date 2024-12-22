@@ -116,6 +116,11 @@ class Product extends Model
         return $this->hasMany(ProductEntry::class);
     }
 
+    public function lastEntry()
+    {
+        return $this->hasOne(ProductEntry::class)->latest();
+    }
+
     // Acessor para exibir o nome correto do fornecedor baseado no tipo (PF ou PJ)
     public function getSupplierNameAttribute()
     {
@@ -157,6 +162,16 @@ class Product extends Model
     }
 
     // Métodos
+    public function calculateConsumerPrice($unitCost)
+    {
+        return $unitCost * (1 + ($this->consumer_markup / 100));
+    }
+
+    public function calculateDistributorPrice($unitCost)
+    {
+        return $unitCost * (1 + ($this->distributor_markup / 100));
+    }
+
     public function updateStock($quantity, $type = 'add')
     {
         if ($type === 'add') {
@@ -181,15 +196,5 @@ class Product extends Model
     {
         $taxAmount = $this->last_purchase_price * ($this->tax_percentage / 100);
         return $this->last_purchase_price + $taxAmount + $this->freight_cost;
-    }
-
-    public function calculateConsumerPrice()
-    {
-        return $this->unit_cost * (1 + ($this->consumer_markup / 100));
-    }
-
-    public function calculateDistributorPrice()
-    {
-        return $this->unit_cost * (1 + ($this->distributor_markup / 100));
     }
 }

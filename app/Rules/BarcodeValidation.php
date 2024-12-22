@@ -47,20 +47,6 @@ class BarcodeValidation implements Rule
             return false;
         }
 
-        // Validação do dígito verificador para EAN-13
-        if (strlen($value) === 13) {
-            $checksum = 0;
-            for ($i = 0; $i < 12; $i++) {
-                $checksum += (($i % 2) === 0 ? 1 : 3) * intval($value[$i]);
-            }
-            $checkDigit = (10 - ($checksum % 10)) % 10;
-            
-            if (intval($value[12]) !== $checkDigit) {
-                $this->message = 'Código de barras EAN-13 inválido.';
-                return false;
-            }
-        }
-
         return true;
     }
 

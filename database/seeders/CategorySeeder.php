@@ -7,35 +7,23 @@ use Illuminate\Database\Seeder;
 
 class CategorySeeder extends Seeder
 {
-    public function run(): void
+    public function run()
     {
         $categories = [
-            ['name' => 'Eletrônicos', 'active' => true],
-            ['name' => 'Informática', 'parent_name' => 'Eletrônicos'],
-            ['name' => 'Smartphones', 'parent_name' => 'Eletrônicos'],
-            
-            ['name' => 'Roupas', 'active' => true],
-            ['name' => 'Masculino', 'parent_name' => 'Roupas'],
-            ['name' => 'Feminino', 'parent_name' => 'Roupas'],
-            
-            ['name' => 'Alimentos', 'active' => true],
-            ['name' => 'Bebidas', 'parent_name' => 'Alimentos'],
-            ['name' => 'Congelados', 'parent_name' => 'Alimentos']
+            ['name' => 'Eletrônicos', 'status' => true],
+            ['name' => 'Roupas', 'status' => true],
+            ['name' => 'Acessórios', 'status' => true],
+            ['name' => 'Calçados', 'status' => true],
+            ['name' => 'Móveis', 'status' => true],
+            ['name' => 'Decoração', 'status' => true],
+            ['name' => 'Livros', 'status' => true],
+            ['name' => 'Brinquedos', 'status' => true],
+            ['name' => 'Esportes', 'status' => true],
+            ['name' => 'Outros', 'status' => true]
         ];
 
-        foreach ($categories as $categoryData) {
-            $parentName = $categoryData['parent_name'] ?? null;
-            unset($categoryData['parent_name']);
-
-            $category = Category::create($categoryData);
-
-            if ($parentName) {
-                $parentCategory = Category::where('name', $parentName)->first();
-                if ($parentCategory) {
-                    $category->parent_id = $parentCategory->id;
-                    $category->save();
-                }
-            }
+        foreach ($categories as $category) {
+            Category::create($category);
         }
     }
 }
