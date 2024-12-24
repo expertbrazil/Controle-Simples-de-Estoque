@@ -22,8 +22,9 @@
             @endif
 
             @if (session('error'))
-                <div class="alert alert-danger">
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
                     {{ session('error') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             @endif
 
@@ -32,8 +33,165 @@
                     <form id="entryForm" action="{{ route('product-entries.store') }}" method="POST" class="needs-validation" novalidate>
                         @csrf
                         
+                        @if(session('error'))
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                {{ session('error') }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        @endif
+
                         <div id="entriesList">
-                            <!-- Os itens serão adicionados aqui dinamicamente -->
+                            @if(old('entries'))
+                                @foreach(old('entries') as $index => $entry)
+                                    <div class="entry-item border rounded p-3 mb-3">
+                                        <div class="d-flex justify-content-between align-items-start mb-3">
+                                            <h5 class="card-title mb-0">Produto</h5>
+                                            <button type="button" class="btn btn-outline-danger btn-sm remove-entry">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+
+                                        <div class="row g-3">
+                                            <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <label class="form-label">Produto</label>
+                                                    <select class="form-control product-search @error('entries.'.$index.'.product_id') is-invalid @enderror" 
+                                                            name="entries[{{$index}}][product_id]" 
+                                                            required>
+                                                        <option value="">Digite para buscar...</option>
+                                                        @if($entry['product_id'])
+                                                            <option value="{{ $entry['product_id'] }}" selected>
+                                                                {{ \App\Models\Product::find($entry['product_id'])->name }}
+                                                            </option>
+                                                        @endif
+                                                    </select>
+                                                    @error('entries.'.$index.'.product_id')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-3">
+                                                <div class="form-group">
+                                                    <label class="form-label">Valor da Compra</label>
+                                                    <div class="input-group">
+                                                        <span class="input-group-text">R$</span>
+                                                        <input type="text" 
+                                                               class="form-control money purchase-price @error('entries.'.$index.'.purchase_price') is-invalid @enderror" 
+                                                               name="entries[{{$index}}][purchase_price]" 
+                                                               value="{{ $entry['purchase_price'] }}"
+                                                               required>
+                                                        @error('entries.'.$index.'.purchase_price')
+                                                            <div class="invalid-feedback">{{ $message }}</div>
+                                                        @enderror
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-3">
+                                                <div class="form-group">
+                                                    <label class="form-label">Imposto</label>
+                                                    <div class="input-group">
+                                                        <input type="text" 
+                                                               class="form-control percentage tax-percentage @error('entries.'.$index.'.tax_percentage') is-invalid @enderror" 
+                                                               name="entries[{{$index}}][tax_percentage]" 
+                                                               value="{{ $entry['tax_percentage'] ?? '0,00' }}">
+                                                        <span class="input-group-text">%</span>
+                                                        @error('entries.'.$index.'.tax_percentage')
+                                                            <div class="invalid-feedback">{{ $message }}</div>
+                                                        @enderror
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-3">
+                                                <div class="form-group">
+                                                    <label class="form-label">Frete</label>
+                                                    <div class="input-group">
+                                                        <span class="input-group-text">R$</span>
+                                                        <input type="text" 
+                                                               class="form-control money freight-cost @error('entries.'.$index.'.freight_cost') is-invalid @enderror" 
+                                                               name="entries[{{$index}}][freight_cost]" 
+                                                               value="{{ $entry['freight_cost'] ?? '0,00' }}">
+                                                        @error('entries.'.$index.'.freight_cost')
+                                                            <div class="invalid-feedback">{{ $message }}</div>
+                                                        @enderror
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-3">
+                                                <div class="form-group">
+                                                    <label class="form-label">Peso</label>
+                                                    <div class="input-group">
+                                                        <input type="text" 
+                                                               class="form-control weight weight-kg @error('entries.'.$index.'.weight_kg') is-invalid @enderror" 
+                                                               name="entries[{{$index}}][weight_kg]" 
+                                                               value="{{ $entry['weight_kg'] ?? '0,000' }}">
+                                                        <span class="input-group-text">kg</span>
+                                                        @error('entries.'.$index.'.weight_kg')
+                                                            <div class="invalid-feedback">{{ $message }}</div>
+                                                        @enderror
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label class="form-label">Custo Unitário</label>
+                                                    <div class="input-group">
+                                                        <span class="input-group-text">R$</span>
+                                                        <input type="text" 
+                                                               class="form-control money unit-cost" 
+                                                               name="entries[{{$index}}][unit_cost]" 
+                                                               value="{{ $entry['unit_cost'] }}"
+                                                               readonly>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label class="form-label">Quantidade</label>
+                                                    <input type="number" 
+                                                           class="form-control quantity @error('entries.'.$index.'.quantity') is-invalid @enderror" 
+                                                           name="entries[{{$index}}][quantity]" 
+                                                           value="{{ $entry['quantity'] ?? 1 }}" 
+                                                           min="1" 
+                                                           required>
+                                                    @error('entries.'.$index.'.quantity')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label class="form-label">Total</label>
+                                                    <div class="input-group">
+                                                        <span class="input-group-text">R$</span>
+                                                        <input type="text" 
+                                                               class="form-control money entry-total" 
+                                                               readonly>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="col-12">
+                                                <div class="form-group">
+                                                    <label class="form-label">Observações</label>
+                                                    <textarea class="form-control @error('entries.'.$index.'.notes') is-invalid @enderror" 
+                                                              name="entries[{{$index}}][notes]" 
+                                                              rows="2">{{ $entry['notes'] }}</textarea>
+                                                    @error('entries.'.$index.'.notes')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            @endif
                         </div>
 
                         <div class="text-center mb-4">
@@ -209,7 +367,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
 <script>
 $(document).ready(function() {
-    let entryCount = 0;
+    let entryCount = {{ old('entries') ? count(old('entries')) - 1 : -1 }};
 
     // Função para formatar número como moeda
     function formatMoney(value) {
@@ -306,15 +464,14 @@ $(document).ready(function() {
                             };
                         })
                     };
-                },
-                cache: true
+                }
             }
         }).on('select2:select', function(e) {
             const data = e.params.data;
             const entryDiv = $(this).closest('.entry-item');
             
             // Preenche o peso
-            entryDiv.find('.weight-kg').val(formatWeight(parseFloat(data.weight_kg)));
+            entryDiv.find('.weight-kg').val(formatWeight(parseFloat(data.weight)));
             
             // Se houver última entrada, preenche os valores
             if (data.lastEntry) {
@@ -362,6 +519,9 @@ $(document).ready(function() {
             calculateEntryValues(entryDiv);
             calculateGrandTotal();
         });
+
+        // Calcula os valores iniciais
+        calculateEntryValues(entryDiv);
     }
 
     // Função para adicionar nova entrada
@@ -420,8 +580,16 @@ $(document).ready(function() {
         this.submit();
     });
 
-    // Adiciona primeira entrada ao carregar
-    addEntry();
+    // Se houver dados antigos, inicializa os plugins para cada entrada
+    if ($('.entry-item').length > 0) {
+        $('.entry-item').each(function() {
+            initializeEntryPlugins($(this));
+        });
+        calculateGrandTotal();
+    } else {
+        // Adiciona primeira entrada ao carregar
+        addEntry();
+    }
 });
 </script>
 @endpush

@@ -111,8 +111,8 @@
                                     </td>
                                     <td>{{ $product->sku }}</td>
                                     <td>{{ $product->name }}</td>
-                                    <td>{{ $product->category->name }}</td>
-                                    <td>{{ $product->brand->name }}</td>
+                                    <td>{{ $product->category->name ?? 'Sem categoria' }}</td>
+                                    <td>{{ $product->brand ? $product->brand->name : 'Sem marca' }}</td>
                                     <td>R$ {{ number_format($product->unit_cost, 2, ',', '.') }}</td>
                                     <td>R$ {{ number_format($product->consumer_price, 2, ',', '.') }}</td>
                                     <td>R$ {{ number_format($product->distributor_price, 2, ',', '.') }}</td>
@@ -182,7 +182,7 @@
 
 @push('styles')
 <style>
-.table > :not(caption) > * > * {
+.table tbody > tr > td {
     padding: 0.75rem;
 }
 .badge {

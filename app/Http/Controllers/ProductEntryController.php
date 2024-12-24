@@ -79,7 +79,14 @@ class ProductEntryController extends Controller
             
             foreach ($request->entries as $entry) {
                 // Validar entrada
-                $this->validateEntry($entry);
+                try {
+                    $this->validateEntry($entry);
+                } catch (\Exception $e) {
+                    return redirect()
+                        ->back()
+                        ->withInput()
+                        ->with('error', $e->getMessage());
+                }
                 
                 $product = Product::findOrFail($entry['product_id']);
                 

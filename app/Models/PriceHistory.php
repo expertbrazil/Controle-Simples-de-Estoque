@@ -108,6 +108,22 @@ class PriceHistory extends Model
         return (($this->consumer_price - $this->old_price) / $this->old_price) * 100;
     }
 
+    // Acessor para calcular a variação percentual de preço
+    public function getPriceVariationAttribute()
+    {
+        $oldPrice = $this->old_price;
+        if ($oldPrice == 0) return 0;
+        
+        return (($this->consumer_price - $oldPrice) / $oldPrice) * 100;
+    }
+
+    public function getFormattedPriceVariationAttribute()
+    {
+        $variation = $this->price_variation;
+        $signal = $variation >= 0 ? '+' : '';
+        return $signal . number_format($variation, 2, ',', '.') . '%';
+    }
+
     // Escopo para obter o histórico de um produto
     public function scopeForProduct($query, $productId)
     {
@@ -117,33 +133,38 @@ class PriceHistory extends Model
     // Escopo para obter variações de preço significativas
     public function scopeSignificantChanges($query, $percentageThreshold = 10)
     {
-        return $query->whereExists(function ($subquery) use ($percentageThreshold) {
-            $subquery->from('price_histories as ph2')
-                ->whereRaw('ph2.product_id = price_histories.product_id')
-                ->whereRaw('ph2.created_at < price_histories.created_at')
-                ->whereRaw('NOT EXISTS (
-                    SELECT 1 FROM price_histories ph3 
-                    WHERE ph3.product_id = ph2.product_id 
-                    AND ph3.created_at > ph2.created_at 
-                    AND ph3.created_at < price_histories.created_at
-                )')
-                ->whereRaw('ABS((price_histories.consumer_price - ph2.consumer_price) / ph2.consumer_price * 100) >= ?', [$percentageThreshold]);
-        });
+        return $query->whereRaw('
+            ABS(
+                (consumer_price - (
+                    SELECT consumer_price 
+                    FROM price_histories ph2 
+                    WHERE ph2.product_id = price_histories.product_id 
+                    AND ph2.created_at < price_histories.created_at
+                    ORDER BY created_at DESC 
+                    LIMIT 1
+                )) / NULLIF((
+                    SELECT consumer_price 
+                    FROM price_histories ph2 
+                    WHERE ph2.product_id = price_histories.product_id 
+                    AND ph2.created_at < price_histories.created_at
+                    ORDER BY created_at DESC 
+                    LIMIT 1
+                ), 0) * 100
+            ) >= ?', [$percentageThreshold]);
     }
 
     // Escopo para obter registros do último mês
     public function scopeLastMonth($query)
     {
-        return $query->whereRaw('created_at >= DATE_SUB(NOW(), INTERVAL 1 MONTH)');
+        return $query->where('created_at', '>=', now()->subMonth());
     }
 
     // Escopo para obter apenas os últimos registros de cada produto
     public function scopeLatestByProduct($query)
     {
-        return $query->whereIn('id', function($subquery) {
-            $subquery->select(\DB::raw('MAX(id)'))
-                ->from('price_histories')
-                ->groupBy('product_id');
-        });
+        $subQuery = self::selectRaw('MAX(id) as id')
+            ->groupBy('product_id');
+            
+        return $query->whereIn('id', $subQuery);
     }
 }

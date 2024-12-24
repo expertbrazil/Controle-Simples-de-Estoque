@@ -488,17 +488,25 @@ class ProductController extends BaseController
             // Log dos dados recebidos
             \Log::info('Dados recebidos para histórico:', $data);
 
+            // Calcula os preços
+            $lastPurchasePrice = $data['last_purchase_price'] ?? 0;
+            $distributorMarkup = $data['distributor_markup'] ?? 0;
+            $consumerMarkup = $data['consumer_markup'] ?? 0;
+
+            $distributorPrice = $lastPurchasePrice * (1 + ($distributorMarkup / 100));
+            $consumerPrice = $lastPurchasePrice * (1 + ($consumerMarkup / 100));
+
             // Cria o registro de histórico
             PriceHistory::create([
                 'product_id' => $product->id,
-                'purchase_price' => $data['last_purchase_price'] ?? 0,
+                'purchase_price' => $lastPurchasePrice,
                 'freight_cost' => $data['freight_cost'] ?? 0,
                 'tax_percentage' => $data['tax_percentage'] ?? 0,
-                'unit_cost' => $data['unit_cost'] ?? 0,
-                'distributor_markup' => $data['distributor_markup'] ?? 0,
-                'distributor_price' => $data['distributor_price'] ?? 0,
-                'consumer_markup' => $data['consumer_markup'] ?? 0,
-                'consumer_price' => $data['consumer_price'] ?? 0,
+                'unit_cost' => $lastPurchasePrice, // Mesmo que purchase_price por enquanto
+                'distributor_markup' => $distributorMarkup,
+                'distributor_price' => $distributorPrice,
+                'consumer_markup' => $consumerMarkup,
+                'consumer_price' => $consumerPrice,
                 'user_id' => auth()->id(),
                 'reason' => $reason,
                 'entry_id' => $entry_id

@@ -236,10 +236,10 @@
                                     </a>
                                 </li>
 
-                                <!-- PDV -->
+                            <!-- PDV -->
                                 <li class="nav-item">
                                     <a class="nav-link {{ Request::routeIs('pdv.*') ? 'active' : '' }}" href="{{ route('pdv.index') }}">
-                                        <i class="fas fa-cash-register"></i>
+                                        <i class="bi bi-cart"></i>
                                         PDV
                                     </a>
                                 </li>

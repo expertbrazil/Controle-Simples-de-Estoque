@@ -11,8 +11,6 @@
         </ol>
     </div>
 
-    @include('layouts.messages')
-
     <div class="card">
         <div class="card-header">
             Edição de Fornecedor
@@ -101,6 +99,34 @@
                     </div>
                 </div>
 
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="nome_contato" class="form-label">Nome do Contato</label>
+                        <input type="text" class="form-control @error('nome_contato') is-invalid @enderror" 
+                               id="nome_contato" 
+                               name="nome_contato" 
+                               value="{{ old('nome_contato', $supplier->nome_contato) }}">
+                        @error('nome_contato')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+                        <label for="cep" class="form-label">CEP</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control @error('cep') is-invalid @enderror" 
+                                   id="cep" 
+                                   name="cep" 
+                                   value="{{ old('cep', $supplier->cep) }}">
+                            <button class="btn btn-outline-secondary" type="button" id="buscarCep">
+                                <i class="bi bi-search"></i>
+                            </button>
+                        </div>
+                        @error('cep')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
 
                 <div class="row">
                     <div class="col-md-6 mb-3">
@@ -130,14 +156,6 @@
                 </div>
 
                 <div class="row">
-                    <div class="col-md-2 mb-3">
-                        <label for="cep" class="form-label">CEP</label>
-                        <input type="text" class="form-control @error('cep') is-invalid @enderror" id="cep" name="cep" value="{{ old('cep', $supplier->cep) }}">
-                        @error('cep')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-
                     <div class="col-md-4 mb-3">
                         <label for="bairro" class="form-label">Bairro</label>
                         <input type="text" class="form-control @error('bairro') is-invalid @enderror" id="bairro" name="bairro" value="{{ old('bairro', $supplier->bairro) }}">
@@ -167,15 +185,30 @@
                     <div class="col-12 mb-3">
                         <label class="form-label d-block">Flag</label>
                         <div class="form-check form-check-inline">
-                            <input class="form-check-input @error('flag') is-invalid @enderror" type="checkbox" name="flag[]" id="flag_cliente" value="cliente" {{ (is_array(old('flag', json_decode($supplier->flag))) && in_array('cliente', old('flag', json_decode($supplier->flag)))) ? 'checked' : '' }}>
+                            <input class="form-check-input @error('flag') is-invalid @enderror" 
+                                   type="checkbox" 
+                                   name="flag[]" 
+                                   id="flag_cliente" 
+                                   value="cliente" 
+                                   {{ (is_array(old('flag', $supplier->flag)) && in_array('cliente', old('flag', $supplier->flag))) ? 'checked' : '' }}>
                             <label class="form-check-label" for="flag_cliente">Cliente</label>
                         </div>
-                        <div class="form-check form-check-inline flag-fornecedor">
-                            <input class="form-check-input @error('flag') is-invalid @enderror" type="checkbox" name="flag[]" id="flag_fornecedor" value="fornecedor" {{ (is_array(old('flag', json_decode($supplier->flag))) && in_array('fornecedor', old('flag', json_decode($supplier->flag)))) ? 'checked' : '' }}>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input @error('flag') is-invalid @enderror" 
+                                   type="checkbox" 
+                                   name="flag[]" 
+                                   id="flag_fornecedor" 
+                                   value="fornecedor" 
+                                   {{ (is_array(old('flag', $supplier->flag)) && in_array('fornecedor', old('flag', $supplier->flag))) ? 'checked' : '' }}>
                             <label class="form-check-label" for="flag_fornecedor">Fornecedor</label>
                         </div>
                         <div class="form-check form-check-inline">
-                            <input class="form-check-input @error('flag') is-invalid @enderror" type="checkbox" name="flag[]" id="flag_revendedor" value="revendedor" {{ (is_array(old('flag', json_decode($supplier->flag))) && in_array('revendedor', old('flag', json_decode($supplier->flag)))) ? 'checked' : '' }}>
+                            <input class="form-check-input @error('flag') is-invalid @enderror" 
+                                   type="checkbox" 
+                                   name="flag[]" 
+                                   id="flag_revendedor" 
+                                   value="revendedor" 
+                                   {{ (is_array(old('flag', $supplier->flag)) && in_array('revendedor', old('flag', $supplier->flag))) ? 'checked' : '' }}>
                             <label class="form-check-label" for="flag_revendedor">Revendedor</label>
                         </div>
                         @error('flag')
@@ -185,22 +218,28 @@
                 </div>
 
                 <div class="row">
-                    <div class="col-md-4 mb-3 user-credentials" style="display: none;">
+                    <div class="col-md-6 mb-3 credentials-fields" style="display: none;">
                         <label for="usuario" class="form-label">Usuário</label>
-                        <input type="text" class="form-control" id="usuario" value="{{ $supplier->usuario }}" readonly disabled>
+                        <input type="text" class="form-control @error('usuario') is-invalid @enderror" 
+                               id="usuario" 
+                               name="usuario" 
+                               value="{{ old('usuario', $supplier->usuario) }}">
+                        @error('usuario')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
 
-                    <div class="col-md-4 mb-3 user-credentials" style="display: none;">
+                    <div class="col-md-6 mb-3 credentials-fields" style="display: none;">
                         <label for="senha" class="form-label">Senha</label>
-                        <div class="input-group">
-                            <input type="password" class="form-control" id="senha" value="{{ $supplier->senha }}" readonly disabled>
-                            <button class="btn btn-outline-secondary" type="button" id="togglePassword">
-                                <i class="fa-solid fa-eye"></i>
-                            </button>
-                        </div>
+                        <input type="password" class="form-control @error('senha') is-invalid @enderror" 
+                               id="senha" 
+                               name="senha" 
+                               value="{{ old('senha', $supplier->senha) }}">
+                        @error('senha')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
                 </div>
-
 
                 <div class="d-flex justify-content-end gap-2">
                     <a href="{{ route('suppliers.index') }}" class="btn btn-secondary">Cancelar</a>
@@ -220,136 +259,95 @@
             var tipoPessoa = $('#tipo_pessoa').val();
             var $documento = $('#documento');
             
-            // Remove máscaras anteriores
-            $documento.unmask();
-            
-            // Aplica a máscara adequada
             if (tipoPessoa === 'F') {
                 $documento.mask('000.000.000-00');
-                $documento.attr('placeholder', '000.000.000-00');
-                // Mostra campos de pessoa física e esconde de pessoa jurídica
-                $('.pessoa-fisica').show();
-                $('.pessoa-juridica').hide();
-                // Limpa o campo de razão social
-                $('#razao_social').val('');
             } else {
                 $documento.mask('00.000.000/0000-00');
-                $documento.attr('placeholder', '00.000.000/0000-00');
-                // Mostra campos de pessoa jurídica e esconde de pessoa física
-                $('.pessoa-juridica').show();
-                $('.pessoa-fisica').hide();
-                // Limpa o campo de nome
-                $('#nome').val('');
             }
         }
 
-        // Atualiza a máscara quando o tipo de pessoa muda
-        $('#tipo_pessoa').on('change', function() {
-            var tipoPessoa = $(this).val();
-            var oldTipoPessoa = $(this).data('old-value');
-            
-            // Se está mudando de tipo de pessoa e já tem dados preenchidos
-            if (oldTipoPessoa && oldTipoPessoa !== tipoPessoa) {
-                var temDados = (tipoPessoa === 'F' && $('#razao_social').val()) || 
-                              (tipoPessoa === 'J' && $('#nome').val());
-                
-                if (temDados) {
-                    if (!confirm('Ao mudar o tipo de pessoa, os dados do nome/razão social serão perdidos. Deseja continuar?')) {
-                        $(this).val(oldTipoPessoa);
-                        return;
-                    }
-                }
-            }
-            
-            // Armazena o valor atual para a próxima verificação
-            $(this).data('old-value', tipoPessoa);
-            
-            updateDocumentoMask();
-        });
-        
-        // Aplica a máscara inicial e armazena o valor inicial
-        $('#tipo_pessoa').data('old-value', $('#tipo_pessoa').val());
-        updateDocumentoMask();
-
-        // Máscara para telefone
-        $('#phone').mask('(00) 0000-0000');
-        
-        // Máscara para WhatsApp
-        $('#whatsapp').mask('(00) 00000-0000');
-        
-        // Máscara para CEP
-        $('#cep').mask('00000-000');
-
-        // Toggle senha
-        $('#togglePassword').on('click', function() {
-            var senha = $('#senha');
-            if (senha.attr('type') === 'password') {
-                senha.attr('type', 'text');
-                $(this).find('i').removeClass('fa-eye').addClass('fa-eye-slash');
-            } else {
-                senha.attr('type', 'password');
-                $(this).find('i').removeClass('fa-eye-slash').addClass('fa-eye');
-            }
-        });
-
-        // Função para controlar a visibilidade dos campos de usuário e senha e opção fornecedor
-        function updateVisibility() {
-            var showCredentials = false;
-            var hideSupplier = false;
-            
+        // Função para verificar se os campos de credenciais devem ser mostrados
+        function updateCredentialsFields() {
+            var hasClienteOrRevendedor = false;
             $('input[name="flag[]"]:checked').each(function() {
                 var value = $(this).val();
                 if (value === 'cliente' || value === 'revendedor') {
-                    showCredentials = true;
-                    hideSupplier = true;
-                    // Desmarca fornecedor se estiver marcado
-                    $('#flag_fornecedor').prop('checked', false);
+                    hasClienteOrRevendedor = true;
                 }
             });
 
-            // Controla visibilidade dos campos de credenciais
-            if (showCredentials) {
-                $('.user-credentials').slideDown();
-                $('.flag-fornecedor').hide(); // Esconde opção fornecedor
+            if (hasClienteOrRevendedor) {
+                $('.credentials-fields').slideDown();
+                $('#usuario, #senha').prop('required', true);
             } else {
-                $('.user-credentials').slideUp();
-                $('.flag-fornecedor').show(); // Mostra opção fornecedor
+                $('.credentials-fields').slideUp();
+                $('#usuario, #senha').prop('required', false);
             }
         }
 
-        // Atualiza visibilidade quando as flags mudam
-        $('input[name="flag[]"]').on('change', function(e) {
-            var $checkbox = $(this);
-            var isClienteOrRevendedor = $checkbox.val() === 'cliente' || $checkbox.val() === 'revendedor';
-            var isFornecedor = $checkbox.val() === 'fornecedor';
-            var wasChecked = !$checkbox.is(':checked'); // Estado anterior do checkbox
+        // Inicialização
+        updateDocumentoMask();
+        updateCredentialsFields();
+
+        // Event listeners
+        $('#tipo_pessoa').on('change', updateDocumentoMask);
+        
+        $('input[name="flag[]"]').on('change', function() {
+            updateCredentialsFields();
+        });
+
+        // Função para buscar endereço pelo CEP
+        function buscarCep() {
+            var cep = $('#cep').val().replace(/\D/g, '');
             
-            if (isClienteOrRevendedor && !$checkbox.is(':checked')) {
-                // Se está desmarcando cliente ou revendedor
-                if ($('.user-credentials').is(':visible')) {
-                    e.preventDefault(); // Previne a mudança do checkbox
-                    if (confirm('Ao remover as flags de cliente e revendedor, os dados de acesso serão apagados. Deseja continuar?')) {
-                        $checkbox.prop('checked', false);
-                        updateVisibility();
+            if (cep.length !== 8) {
+                alert('CEP inválido');
+                return;
+            }
+
+            // Mostrar indicador de carregamento
+            $('#buscarCep').html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>');
+            $('#buscarCep').prop('disabled', true);
+
+            $.get(`https://viacep.com.br/ws/${cep}/json/`)
+                .done(function(data) {
+                    if (!data.erro) {
+                        $('#rua').val(data.logradouro);
+                        $('#bairro').val(data.bairro);
+                        $('#cidade').val(data.localidade);
+                        $('#uf').val(data.uf);
+                        
+                        // Foca no campo número após preencher o endereço
+                        $('#numero').focus();
                     } else {
-                        $checkbox.prop('checked', true);
+                        alert('CEP não encontrado');
                     }
-                }
-            } else if (isClienteOrRevendedor && $checkbox.is(':checked')) {
-                // Se marcou cliente ou revendedor, desmarca fornecedor
-                $('#flag_fornecedor').prop('checked', false);
-                updateVisibility();
-            } else if (isFornecedor && $checkbox.is(':checked')) {
-                // Se marcou fornecedor, desmarca cliente e revendedor
-                $('#flag_cliente, #flag_revendedor').prop('checked', false);
-                updateVisibility();
-            } else {
-                updateVisibility();
+                })
+                .fail(function() {
+                    alert('Erro ao buscar CEP. Tente novamente.');
+                })
+                .always(function() {
+                    // Restaurar botão de busca
+                    $('#buscarCep').html('<i class="bi bi-search"></i>');
+                    $('#buscarCep').prop('disabled', false);
+                });
+        }
+
+        // Event listener para o botão de buscar CEP
+        $('#buscarCep').on('click', buscarCep);
+
+        // Buscar CEP ao pressionar Enter no campo
+        $('#cep').on('keypress', function(e) {
+            if (e.which === 13) {
+                e.preventDefault();
+                buscarCep();
             }
         });
 
-        // Executa na carga inicial da página
-        updateVisibility();
+        // Máscaras para os campos
+        $('#phone').mask('(00) 0000-0000');
+        $('#whatsapp').mask('(00) 00000-0000');
+        $('#cep').mask('00000-000');
     });
 </script>
 @endpush

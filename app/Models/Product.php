@@ -85,12 +85,18 @@ class Product extends Model
     // Relacionamentos
     public function category()
     {
-        return $this->belongsTo(Category::class);
+        return $this->belongsTo(Category::class)
+            ->withDefault([
+                'name' => 'Sem categoria'
+            ]);
     }
 
     public function brand()
     {
-        return $this->belongsTo(Brand::class);
+        return $this->belongsTo(Brand::class)
+            ->withDefault([
+                'name' => 'Sem marca'
+            ]);
     }
 
     public function supplier()

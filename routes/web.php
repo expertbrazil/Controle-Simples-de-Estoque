@@ -63,11 +63,11 @@ Route::middleware('auth')->group(function () {
     Route::resource('price-lists', PriceListController::class);
     
     // PDV
-    Route::prefix('pdv')->group(function () {
+    Route::prefix('pdv')->middleware('auth')->group(function () {
         Route::get('/', [PdvController::class, 'index'])->name('pdv.index');
-        Route::post('/', [PdvController::class, 'store'])->name('pdv.store');
-        Route::get('/product/{id}', [PdvController::class, 'getProduct'])->name('pdv.product');
-        Route::get('/customer/{id}', [PdvController::class, 'getCustomer'])->name('pdv.customer');
+        Route::get('/get-products', [PdvController::class, 'getProducts'])->name('pdv.get-products');
+        Route::get('/customers/search', [PdvController::class, 'searchCustomers'])->name('pdv.customers.search');
+        Route::post('/finalize', [PdvController::class, 'finalizeSale'])->name('pdv.finalize');
     });
     
     // Vendas
